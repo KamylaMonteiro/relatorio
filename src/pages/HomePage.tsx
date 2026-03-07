@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Calendar, Heart, Map, Key } from 'lucide-react';
+import { Users, Calendar, Heart, Map, Key, FileText } from 'lucide-react';
 
 const HomePage = () => {
   const navigate = useNavigate();
@@ -22,6 +22,9 @@ const HomePage = () => {
         break;
       case 'Grupos de Campo':
         navigate('/grupos-de-campo');
+        break;
+      case 'Relatório':
+        navigate('/relatorio');
         break;
       default:
         alert(`Navegando para: ${section} (não implementado)`);
@@ -134,6 +137,31 @@ const HomePage = () => {
               <div className="flex items-center gap-2">
                 <Map size={20} />
                 <h3 className="font-semibold">Grupos de Saída de Campo</h3>
+              </div>
+            </div>
+          </div>
+
+          {/* Relatório */}
+          <div 
+            onClick={() => handleNavigation('Relatório')}
+            className="block bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+          >
+            <div className="h-48 bg-gradient-to-br from-teal-500 via-emerald-500 to-green-600 flex items-center justify-center p-2 relative">
+              <div className="absolute inset-0 bg-gradient-to-tr from-teal-400/80 via-emerald-400/80 to-green-500/80"></div>
+              <img 
+                src="https://cms-imgp.jw-cdn.org/img/p/502014631/univ/art/502014631_univ_lsr_lg.jpg"
+                alt="Relatório"
+                className="max-w-full max-h-full object-contain rounded relative z-10 drop-shadow-lg"
+                loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }}
+              />
+            </div>
+            <div className="p-4 bg-green-700 text-white">
+              <div className="flex items-center gap-2">
+                <FileText size={20} />
+                <h3 className="font-semibold">Relatório</h3>
               </div>
             </div>
           </div>
