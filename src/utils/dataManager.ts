@@ -85,6 +85,8 @@ export interface Member {
   responsibilities?: string[];
   notes?: string;
   codigo_acesso?: string;
+  is_report_user?: boolean;
+  alternate_id?: string;
 }
 
 export interface FieldGroup {

@@ -42,7 +42,7 @@ const AdminDashboard = () => {
     try {
       // Primeiro, tenta carregar dados da nuvem
       await dataManager.loadAllDataFromCloud();
-      
+
       const loadedMeetings = await dataManager.getMeetings() || [];
       const now = new Date(); // Data e hora atual real
       const parseDate = (dateStr: string) => {
@@ -118,6 +118,7 @@ const AdminDashboard = () => {
           responsibilities: memberData.responsibilities || [],
           notes: memberData.notes || '',
           codigo_acesso: memberData.codigo_acesso || '',
+          is_report_user: false,
         });
       }
       await loadData();
@@ -183,7 +184,7 @@ const AdminDashboard = () => {
       case 'members':
         return (
           <MembersSection
-            members={members}
+            members={members.filter(m => m.is_report_user !== true)}
             onNewMember={handleNewMember}
             onViewMembers={handleViewMembers}
           />
@@ -216,7 +217,6 @@ const AdminDashboard = () => {
             </div>
             <div>
               <h1 className="text-base font-bold leading-none">Painel Administrativo</h1>
-              <p className="text-green-200 text-xs mt-0.5 leading-none">Congregação</p>
             </div>
           </div>
           <button
@@ -279,7 +279,7 @@ const AdminDashboard = () => {
       <MembersListModal
         isOpen={showMembersModal}
         onClose={() => setShowMembersModal(false)}
-        members={members}
+        members={members.filter(m => m.is_report_user !== true)}
         category={selectedCategory}
         onEditMember={handleEditMember}
         onDeleteMember={handleDeleteMember}

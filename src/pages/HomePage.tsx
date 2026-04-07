@@ -42,7 +42,7 @@ const HomePage = () => {
           <Key size={18} className="opacity-80" />
         </button>
         <div className="text-center flex items-center justify-center h-full mt-1">
-          <h1 className="text-lg md:text-xl font-extrabold tracking-wide uppercase text-white/95">CONGREGAÇÃO RIBEIRÃO DO LIPA</h1>
+          <h1 className="text-lg md:text-xl font-bold uppercase text-white">CONGREGAÇÃO RIBEIRÃO DO LIPA</h1>
         </div>
       </header>
 

@@ -236,19 +236,22 @@ const Relatorio = () => {
                             inputMode="numeric"
                             value={horasTrabalhadas}
                             onChange={(e) => {
-                              // Mask: only digits, auto-insert comma after 2 digits → format: 00,00
-                              const raw = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
-                              if (raw.length <= 2) {
-                                setHorasTrabalhadas(raw);
-                              } else {
-                                setHorasTrabalhadas(raw.slice(0, raw.length - 2) + ',' + raw.slice(-2));
+                              // Strict 00,00 mask (right-to-left shift)
+                              const digits = e.target.value.replace(/[^0-9]/g, '');
+                              if (digits.length === 0) {
+                                setHorasTrabalhadas('');
+                                return;
                               }
+                              
+                              const limited = digits.slice(-4).padStart(4, '0');
+                              const formatted = limited.slice(0, 2) + ',' + limited.slice(2);
+                              setHorasTrabalhadas(formatted);
                             }}
                             onBlur={() => {
-                              if (horasTrabalhadas) {
-                                const raw = horasTrabalhadas.replace(/[^0-9]/g, '').padStart(4, '0');
-                                setHorasTrabalhadas(raw.slice(0, 2) + ',' + raw.slice(2));
-                              }
+                              if (horasTrabalhadas === '') return;
+                              // Ensure it's never left in an incomplete state if the user interacted
+                              const digits = horasTrabalhadas.replace(/[^0-9]/g, '').padStart(4, '0');
+                              setHorasTrabalhadas(digits.slice(0, 2) + ',' + digits.slice(2));
                             }}
                             placeholder="00,00"
                             className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 text-gray-700 font-mono text-lg transition-colors pr-12"
