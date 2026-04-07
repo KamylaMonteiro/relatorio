@@ -1,11 +1,11 @@
-import React from 'react';
+
 import { useNavigate } from 'react-router-dom';
 import { Users, Calendar, Heart, Map, Key, FileText } from 'lucide-react';
 
 const HomePage = () => {
   const navigate = useNavigate();
 
-  const handleNavigation = (section) => {
+  const handleNavigation = (section: string) => {
     // Redireciona para a seção correspondente
     switch (section) {
       case 'Login':
@@ -33,18 +33,16 @@ const HomePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <header className="bg-green-800 text-white px-4 py-6 relative">
-        <button 
+        <button
           onClick={() => handleNavigation('Login')}
-          className="absolute top-4 right-4 p-2 hover:bg-green-700 rounded-full transition-colors"
+          className="absolute top-4 right-4 p-2 hover:bg-green-700/50 rounded-full transition-colors"
           title="Acesso Administrativo"
         >
-          <Key size={20} />
+          <Key size={18} className="opacity-80" />
         </button>
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-1">QUADRO DE ANÚNCIOS</h1>
-          <p className="text-green-200">CONGREGAÇÃO RIBEIRÃO DO LIPA</p>
+        <div className="text-center flex items-center justify-center h-full mt-1">
+          <h1 className="text-lg md:text-xl font-extrabold tracking-wide uppercase text-white/95">CONGREGAÇÃO RIBEIRÃO DO LIPA</h1>
         </div>
       </header>
 
@@ -52,13 +50,13 @@ const HomePage = () => {
       <main className="p-4 max-w-4xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {/* Reunião Meio de Semana */}
-          <div 
+          <div
             onClick={() => handleNavigation('Reunião Meio de Semana')}
             className="block bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
           >
             <div className="h-48 bg-gradient-to-br from-cyan-500 via-blue-500 to-purple-600 flex items-center justify-center p-2 relative">
               <div className="absolute inset-0 bg-gradient-to-tr from-cyan-400/80 via-blue-400/80 to-purple-500/80"></div>
-              <img 
+              <img
                 src="https://cms-imgp.jw-cdn.org/img/p/501400106/univ/art/501400106_univ_lsr_lg.jpg"
                 alt="Reunião Meio de Semana"
                 className="max-w-full max-h-full object-contain rounded relative z-10 drop-shadow-lg"
@@ -75,13 +73,13 @@ const HomePage = () => {
           </div>
 
           {/* Reunião Fim de Semana */}
-          <div 
+          <div
             onClick={() => handleNavigation('Reunião Fim de Semana')}
             className="block bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
           >
             <div className="h-48 bg-gradient-to-br from-amber-400 via-orange-500 to-red-600 flex items-center justify-center p-2 relative">
               <div className="absolute inset-0 bg-gradient-to-tr from-yellow-400/80 via-orange-400/80 to-red-500/80"></div>
-              <img 
+              <img
                 src="https://cms-imgp.jw-cdn.org/img/p/502012477/univ/art/502012477_univ_lsr_lg.jpg"
                 alt="Reunião Fim de Semana"
                 className="max-w-full max-h-full object-contain rounded relative z-10 drop-shadow-lg"
@@ -98,13 +96,13 @@ const HomePage = () => {
           </div>
 
           {/* Donativos */}
-          <div 
+          <div
             onClick={() => handleNavigation('Donativos')}
             className="block bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
           >
             <div className="h-48 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-600 flex items-center justify-center p-2 relative">
               <div className="absolute inset-0 bg-gradient-to-tr from-indigo-400/80 via-purple-400/80 to-pink-500/80"></div>
-              <img 
+              <img
                 src="https://cms-imgp.jw-cdn.org/img/p/202020331/univ/art/202020331_univ_lsr_lg.jpg"
                 alt="Faça seu Donativo"
                 className="max-w-full max-h-full object-contain rounded relative z-10 drop-shadow-lg"
@@ -120,13 +118,13 @@ const HomePage = () => {
           </div>
 
           {/* Grupos de Campo e Território */}
-          <div 
+          <div
             onClick={() => handleNavigation('Grupos de Campo')}
             className="block bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
           >
             <div className="h-48 bg-gradient-to-br from-rose-500 via-red-500 to-orange-600 flex items-center justify-center p-2 relative">
               <div className="absolute inset-0 bg-gradient-to-tr from-rose-400/80 via-red-400/80 to-orange-500/80"></div>
-              <img 
+              <img
                 src="https://cms-imgp.jw-cdn.org/img/p/502015242/univ/art/502015242_univ_lsr_lg.jpg"
                 alt="Grupos de Campo"
                 className="max-w-full max-h-full object-contain rounded relative z-10 drop-shadow-lg"
@@ -142,13 +140,13 @@ const HomePage = () => {
           </div>
 
           {/* Relatório */}
-          <div 
+          <div
             onClick={() => handleNavigation('Relatório')}
             className="block bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
           >
             <div className="h-48 bg-gradient-to-br from-teal-500 via-emerald-500 to-green-600 flex items-center justify-center p-2 relative">
               <div className="absolute inset-0 bg-gradient-to-tr from-teal-400/80 via-emerald-400/80 to-green-500/80"></div>
-              <img 
+              <img
                 src="https://cms-imgp.jw-cdn.org/img/p/502014631/univ/art/502014631_univ_lsr_lg.jpg"
                 alt="Relatório"
                 className="max-w-full max-h-full object-contain rounded relative z-10 drop-shadow-lg"

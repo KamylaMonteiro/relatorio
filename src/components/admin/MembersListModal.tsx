@@ -1,6 +1,7 @@
 import React from 'react';
 import { X, Edit, Trash2, User, FileText } from 'lucide-react';
 import { Member } from '../../utils/dataManager';
+import DataManager from '../../utils/dataManager';
 
 interface MembersListModalProps {
   isOpen: boolean;
@@ -30,11 +31,21 @@ const MembersListModal: React.FC<MembersListModalProps> = ({
     }
   };
 
-  const handleDeleteMember = (member: Member) => {
-    onDeleteMember(member.id);
+  const handleDeleteMember = async (member: Member) => {
+    if (!window.confirm(`Tem certeza que deseja excluir "${member.name}"?`)) return;
+    try {
+      const dataManager = DataManager.getInstance();
+      await dataManager.deleteMember(member.id);
+      onDeleteMember(member.id);
+    } catch (err) {
+      console.error('Erro ao excluir membro:', err);
+      alert('Erro ao excluir membro. Verifique o console.');
+    }
   };
 
-  const categoryMembers = members.filter(m => m.category === category);
+  const categoryMembers = members.filter(m =>
+    m.category.toLowerCase().includes(category.toLowerCase())
+  );
   const filteredMembers = categoryMembers.filter(m =>
     m.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -46,16 +57,20 @@ const MembersListModal: React.FC<MembersListModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <button
-        onClick={onClose}
-        className="fixed top-4 right-4 z-60 bg-white text-red-500 hover:text-red-700 rounded-full p-2 shadow-lg hover:bg-red-50 transition-all duration-200 border-2 border-red-200 hover:border-red-300"
-        title="Fechar"
-      >
-        <X size={24} />
-      </button>
-
-      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto relative">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-white rounded-lg p-6 w-full max-w-4xl max-h-[80vh] overflow-y-auto relative animate-in zoom-in-95 duration-200">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+          title="Fechar"
+        >
+          <X size={20} />
+        </button>
         <div className="flex justify-between items-center mb-4">
           <div>
             <h3 className="text-lg font-bold">{getCategoryTitle(category)}</h3>
@@ -74,7 +89,7 @@ const MembersListModal: React.FC<MembersListModalProps> = ({
             )}
           </div>
         </div>
-        
+
         <div className="mb-4">
           <input
             type="text"
@@ -92,33 +107,24 @@ const MembersListModal: React.FC<MembersListModalProps> = ({
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h4 className="font-semibold">{member.name}</h4>
-                    {member.status && (
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        member.status === 'ativo' 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {member.status === 'ativo' ? 'Ativo' : 'Inativo'}
-                      </span>
-                    )}
                   </div>
-                  
+
                   {member.grupo && (
                     <p className="text-sm text-gray-600 mb-1">🏠 Grupo: {member.grupo}</p>
                   )}
-                  
+
                   {member.phone && (
                     <p className="text-sm text-gray-600">📞 {member.phone}</p>
                   )}
-                  
+
                   {member.email && (
                     <p className="text-sm text-gray-600">✉️ {member.email}</p>
                   )}
-                  
+
                   {member.address && (
                     <p className="text-sm text-gray-600">🏠 {member.address}</p>
                   )}
-                  
+
                   {member.responsibilities && member.responsibilities.length > 0 && (
                     <div className="mt-2">
                       <p className="text-xs font-medium text-gray-700">Responsabilidades:</p>
@@ -144,7 +150,7 @@ const MembersListModal: React.FC<MembersListModalProps> = ({
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex gap-2 ml-4">
                   <button
                     onClick={() => onEditMember(member)}
@@ -165,7 +171,7 @@ const MembersListModal: React.FC<MembersListModalProps> = ({
             </div>
           ))}
         </div>
-        
+
         {filteredMembers.length === 0 && (
           <div className="text-center py-8 text-gray-500">
             <User size={48} className="mx-auto mb-2 opacity-50" />

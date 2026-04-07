@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Smartphone } from 'lucide-react';
 
@@ -23,9 +22,6 @@ const Donativos = () => {
           {/* Header */}
           <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white p-6 text-center">
             <h2 className="text-xl font-bold mb-2">Contribuições Voluntárias</h2>
-            <p className="text-purple-100 text-sm">
-              "Faça cada um conforme resolveu no coração, não a contragosto nem por obrigação, pois Deus ama quem dá com alegria." — 2 Coríntios 9:7
-            </p>
           </div>
 
           {/* Content */}

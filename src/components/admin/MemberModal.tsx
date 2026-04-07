@@ -30,7 +30,8 @@ const MemberModal: React.FC<MemberModalProps> = ({
       grupo: undefined,
       status: defaultCategory === 'publicador' ? 'ativo' : undefined,
       responsibilities: [],
-      notes: ''
+      notes: '',
+      codigo_acesso: ''
     };
   });
 
@@ -39,7 +40,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
 
   // Load available categories (default + custom) from localStorage
   useEffect(() => {
-    const defaultCategories = ['publicador', 'servo', 'anciao'];
+    const defaultCategories = ['publicador', 'pioneiro', 'servo', 'anciao'];
     const savedCustomCategories = localStorage.getItem('customCategories');
     const savedHiddenCategories = localStorage.getItem('hiddenDefaultCategories');
     
@@ -74,7 +75,8 @@ const MemberModal: React.FC<MemberModalProps> = ({
         grupo: undefined,
         status: defaultCategory === 'publicador' ? 'ativo' : undefined,
         responsibilities: [],
-        notes: ''
+        notes: '',
+        codigo_acesso: ''
       });
     }
   }, [editingMember, isOpen, defaultCategory]);
@@ -91,12 +93,13 @@ const MemberModal: React.FC<MemberModalProps> = ({
       case 'anciao': return 'Ancião';
       case 'servo': return 'Servo Ministerial';
       case 'publicador': return 'Publicador';
+      case 'pioneiro': return 'Pioneiro';
       default: return category.charAt(0).toUpperCase() + category.slice(1);
     }
   };
 
   const isDefaultCategory = (category: string) => {
-    return ['anciao', 'servo', 'publicador'].includes(category);
+    return ['anciao', 'servo', 'publicador', 'pioneiro'].includes(category);
   };
 
   const shouldShowResponsibilities = () => {
@@ -129,16 +132,20 @@ const MemberModal: React.FC<MemberModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <button
-        onClick={onClose}
-        className="fixed top-4 right-4 z-60 bg-white text-red-500 hover:text-red-700 rounded-full p-2 shadow-lg hover:bg-red-50 transition-all duration-200 border-2 border-red-200 hover:border-red-300"
-        title="Fechar"
-      >
-        <X size={24} />
-      </button>
-
-      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto relative">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto relative animate-in zoom-in-95 duration-200">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+          title="Fechar"
+        >
+          <X size={20} />
+        </button>
         <h3 className="text-lg font-bold mb-4">
           {editingMember ? 'Editar Membro' : `Novo ${getCategoryDisplayName(memberData.category || 'publicador')}`}
         </h3>
@@ -168,7 +175,7 @@ const MemberModal: React.FC<MemberModalProps> = ({
                 responsibilities: e.target.value === 'anciao' || e.target.value === 'servo' ? [] : undefined
               })}
               className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled={!editingMember && defaultCategory && isDefaultCategory(defaultCategory)}
+              disabled={!!(!editingMember && defaultCategory && isDefaultCategory(defaultCategory))}
             >
               {availableCategories.map(cat => (
                 <option key={cat} value={cat}>
@@ -239,6 +246,17 @@ const MemberModal: React.FC<MemberModalProps> = ({
               value={memberData.address || ''}
               onChange={(e) => setMemberData({...memberData, address: e.target.value})}
               className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Código de Acesso (Relatório)</label>
+            <input
+              type="text"
+              value={memberData.codigo_acesso || ''}
+              onChange={(e) => setMemberData({...memberData, codigo_acesso: e.target.value})}
+              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Ex: 123456"
             />
           </div>
 

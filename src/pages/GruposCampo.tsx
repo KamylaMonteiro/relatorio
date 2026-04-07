@@ -1,15 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, MapPin, Clock, Users } from 'lucide-react';
-import DataManager, { FieldGroup, Member, Territory, GroupMember } from '../utils/dataManager';
+import DataManager, { FieldGroup, Territory, GroupMember } from '../utils/dataManager';
 
 const GruposCampo = () => {
   const [activeTab, setActiveTab] = useState('grupos');
   const [fieldGroups, setFieldGroups] = useState<FieldGroup[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
   const [territories, setTerritories] = useState<Territory[]>([]);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const dataManager = DataManager.getInstance();
 
   useEffect(() => {
@@ -22,15 +23,13 @@ const GruposCampo = () => {
       // Carrega dados da nuvem primeiro
       await dataManager.loadAllDataFromCloud();
       
-      const [loadedGroups, loadedMembers, loadedTerritories, loadedGroupMembers] = await Promise.all([
+      const [loadedGroups, loadedTerritories, loadedGroupMembers] = await Promise.all([
         dataManager.getFieldGroups(),
-        dataManager.getMembers(),
         dataManager.getTerritories(),
         dataManager.getGroupMembers()
       ]);
       
       setFieldGroups(loadedGroups || []);
-      setMembers(loadedMembers || []);
       setTerritories(loadedTerritories || []);
       setGroupMembers(loadedGroupMembers || []);
     } catch (error) {
@@ -52,6 +51,35 @@ const GruposCampo = () => {
     });
     
     return organized;
+  };
+
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe || isRightSwipe) {
+      const tabs = ['grupos', 'territorios', 'lista-grupos'];
+      const currentIndex = tabs.indexOf(activeTab);
+      
+      if (isLeftSwipe && currentIndex < tabs.length - 1) {
+        setActiveTab(tabs[currentIndex + 1]);
+      } else if (isRightSwipe && currentIndex > 0) {
+        setActiveTab(tabs[currentIndex - 1]);
+      }
+    }
   };
 
   if (isLoading) {
@@ -129,10 +157,14 @@ const GruposCampo = () => {
       </div>
 
       {/* Content */}
-      <main className="p-4 max-w-4xl mx-auto">
+      <main 
+        className="p-4 max-w-4xl mx-auto"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         {activeTab === 'grupos' && (
           <div className="space-y-4">
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-4"></div>
 
             {fieldGroups.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm p-8 text-center">
@@ -192,7 +224,6 @@ const GruposCampo = () => {
 
         {activeTab === 'territorios' && (
           <div className="space-y-4">
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-4"></div>
 
             {territories.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm p-8 text-center">
@@ -272,7 +303,6 @@ const GruposCampo = () => {
 
         {activeTab === 'lista-grupos' && (
           <div className="space-y-4">
-            <div className="bg-white rounded-lg shadow-sm p-4 mb-4"></div>
 
             {groupMembers.length === 0 ? (
               <div className="bg-white rounded-lg shadow-sm p-8 text-center">

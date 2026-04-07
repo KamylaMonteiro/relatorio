@@ -60,7 +60,6 @@ const Login = () => {
           </div>
 
           <h1 className="text-3xl font-bold text-gray-800 mb-2 tracking-wide">Acesso Administrativo</h1>
-          <p className="text-gray-600 text-lg font-light">Congregação Ribeirão do Lipa</p>
         </div>
 
         {/* Login Form */}
@@ -79,7 +78,6 @@ const Login = () => {
                   value={credentials.username}
                   onChange={handleChange}
                   className="w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 placeholder-gray-400 bg-gray-50"
-                  placeholder="Digite seu usuário"
                   required
                 />
               </div>
@@ -98,7 +96,6 @@ const Login = () => {
                   value={credentials.password}
                   onChange={handleChange}
                   className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 placeholder-gray-400 bg-gray-50"
-                  placeholder="Digite sua senha"
                   required
                 />
                 <button

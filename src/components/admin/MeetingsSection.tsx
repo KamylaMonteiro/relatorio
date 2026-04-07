@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Trash2, Save, ChevronDown, Plus } from 'lucide-react';
+import { Trash2, Save, ChevronDown, Plus, Calendar, Loader2 } from 'lucide-react';
 import DataManager, { Meeting, Assignment } from '../../utils/dataManager';
 
 interface MeetingsSectionProps {
@@ -11,9 +11,9 @@ interface MeetingsSectionProps {
 
 const MeetingsSection: React.FC<MeetingsSectionProps> = ({
   meetings,
-  onEditMeeting,
+  onEditMeeting: _onEditMeeting,
   onDeleteMeeting,
-  onUpdateMeetings,
+  onUpdateMeetings: _onUpdateMeetings,
 }) => {
   const [activeTab, setActiveTab] = useState<'meio-semana' | 'fim-semana'>('meio-semana');
   const [selectedDate, setSelectedDate] = useState<string>('');
@@ -138,7 +138,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
           id: uniqueId,
           date: selectedDate,
           type: activeTab,
-          presidente: activeTab === 'fim-semana' ? '' : undefined,
+          presidente: activeTab === 'fim-semana' ? '' : '',
           status: 'Rascunho',
           audioVideo: '',
           indicador: '',
@@ -247,7 +247,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
           ? {
               ...meeting,
               [field]: {
-                ...meeting[field as keyof Meeting],
+                ...(meeting[field as keyof Meeting] as object ?? {}),
                 [subField]: value,
               },
             }
@@ -262,7 +262,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
         meeting.id === id && 'ministerio' in meeting
           ? {
               ...meeting,
-              ministerio: meeting.ministerio.map((item, i) =>
+              ministerio: (meeting.ministerio || []).map((item, i) =>
                 i === index
                   ? {
                       ...item,
@@ -299,7 +299,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
         meeting.id === id && 'ministerio' in meeting
           ? {
               ...meeting,
-              ministerio: meeting.ministerio.filter((_, i) => i !== index),
+              ministerio: (meeting.ministerio || []).filter((_, i) => i !== index),
             }
           : meeting
       )
@@ -515,71 +515,88 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
   }, []);
 
   return (
-    <div className="p-4 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Reunião de {activeTab === 'meio-semana' ? 'Meio de Semana' : 'Fim de Semana'}
-        </h2>
-        <select
-          value={selectedDate}
-          onChange={(e) => setSelectedDate(e.target.value)}
-          className="border px-3 py-2 rounded text-gray-700"
-        >
-          <option value="">Selecione uma data</option>
-          {getNextNDatesByWeekday(20, activeTab === 'meio-semana' ? 3 : 6).map((date) => (
-            <option key={date} value={date}>
-              {date}
-            </option>
-          ))}
-        </select>
+    <div className="max-w-6xl mx-auto">
+      {/* Page header */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <h2 className="text-2xl font-bold text-gray-800">Reuniões</h2>
+
+        {/* Date selector */}
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 shadow-sm">
+          <Calendar size={15} className="text-gray-400 flex-shrink-0" />
+          <select
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            className="text-sm text-gray-700 outline-none bg-transparent cursor-pointer pr-2"
+          >
+            <option value="">Selecione uma data</option>
+            {getNextNDatesByWeekday(20, activeTab === 'meio-semana' ? 3 : 6).map((date) => (
+              <option key={date} value={date}>{date}</option>
+            ))}
+          </select>
+        </div>
       </div>
-      <div className="mb-6">
-        <button
-          onClick={() => {
-            setActiveTab('meio-semana');
-            setSelectedDate('');
-          }}
-          className={`px-4 py-2 rounded-t-lg ${activeTab === 'meio-semana' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-        >
-          Meio de Semana
-        </button>
-        <button
-          onClick={() => {
-            setActiveTab('fim-semana');
-            setSelectedDate('');
-          }}
-          className={`px-4 py-2 rounded-t-lg ml-2 ${activeTab === 'fim-semana' ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700'}`}
-        >
-          Fim de Semana
-        </button>
+
+      {/* Tab bar */}
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl mb-6 w-fit">
+        {(['meio-semana', 'fim-semana'] as const).map((tab) => (
+          <button
+            key={tab}
+            onClick={() => { setActiveTab(tab); setSelectedDate(''); }}
+            className={`px-5 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+              activeTab === tab
+                ? 'bg-white text-gray-800 shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            {tab === 'meio-semana' ? 'Meio de Semana' : 'Fim de Semana'}
+          </button>
+        ))}
       </div>
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="font-bold text-lg mb-4 text-gray-800">
-          Reunião {activeTab === 'meio-semana' ? 'de Meio de Semana' : 'de Fim de Semana'} {selectedDate || 'selecione uma data'}
-        </h3>
-        <div className="space-y-6">
-          {selectedDate && displayMeetings.map((meeting) => (
-            <div key={meeting.id} className="border rounded-lg p-4 bg-gray-50">
-              <div className="flex justify-between items-center mb-2">
-                <h4 className="font-medium">Data: {meeting.date}</h4>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleSaveMeeting(meeting)}
-                    disabled={isSaving}
-                    className={`text-green-600 hover:text-green-800 p-1 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    title="Salvar"
-                  >
-                    <Save size={16} />
-                  </button>
-                  <button
-                    onClick={() => onDeleteMeeting(meeting.id)}
-                    className="text-red-600 hover:text-red-800 p-1"
-                    title="Excluir"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+      {/* Meeting container */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        {!selectedDate ? (
+          <div className="flex flex-col items-center justify-center py-16 text-gray-300">
+            <Calendar size={48} className="mb-3" />
+            <p className="text-base font-medium text-gray-400">Selecione uma data acima</p>
+            <p className="text-sm text-gray-300 mt-1">para carregar ou criar a reunião</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+          {displayMeetings.map((meeting) => (
+              <div key={meeting.id} className="border border-gray-100 rounded-2xl p-5 bg-gray-50/50">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center">
+                      <Calendar size={16} className="text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400 font-medium">Reunião</p>
+                      <h4 className="font-bold text-gray-800 leading-tight">{meeting.date}</h4>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleSaveMeeting(meeting)}
+                      disabled={isSaving}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold transition-all ${
+                        isSaving
+                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                          : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
+                      }`}
+                      title="Salvar"
+                    >
+                      {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+                      {isSaving ? 'Salvando...' : 'Salvar'}
+                    </button>
+                    <button
+                      onClick={() => onDeleteMeeting(meeting.id)}
+                      className="p-1.5 rounded-xl text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all"
+                      title="Excluir"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
                 </div>
-              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeTab === 'fim-semana' && (
                   <div>
@@ -831,7 +848,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
                   </div>
                 </section>
               )}
-              {activeTab === 'fim-semana' && 'discursoPublico' in meeting && meeting.sentinela && (
+              {activeTab === 'fim-semana' && meeting.discursoPublico && meeting.sentinela && (
                 <>
                   <div className="mt-4">
                     <div className="bg-blue-600 text-white px-4 py-3">
@@ -843,7 +860,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
                           <label className="block text-sm font-medium text-gray-700 mb-1">Tema</label>
                           <input
                             type="text"
-                            value={meeting.discursoPublico.tema || ''}
+                            value={meeting.discursoPublico?.tema || ''}
                             onChange={(e) => handleNestedInputChange(meeting.id, 'discursoPublico', 'tema', e.target.value)}
                             className="w-full border rounded px-3 py-2"
                           />
@@ -852,7 +869,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
                           <label className="block text-sm font-medium text-gray-700 mb-1">Orador</label>
                           <input
                             type="text"
-                            value={meeting.discursoPublico.orador || ''}
+                            value={meeting.discursoPublico?.orador || ''}
                             onChange={(e) => handleNestedInputChange(meeting.id, 'discursoPublico', 'orador', e.target.value)}
                             className="w-full border rounded px-3 py-2"
                           />
@@ -861,7 +878,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
                           <label className="block text-sm font-medium text-gray-700 mb-1">Congregação</label>
                           <input
                             type="text"
-                            value={meeting.discursoPublico.congregacao || ''}
+                            value={meeting.discursoPublico?.congregacao || ''}
                             onChange={(e) => handleNestedInputChange(meeting.id, 'discursoPublico', 'congregacao', e.target.value)}
                             className="w-full border rounded px-3 py-2"
                           />
@@ -879,7 +896,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
                           <label className="block text-sm font-medium text-gray-700 mb-1">Tema</label>
                           <input
                             type="text"
-                            value={meeting.sentinela.tema || ''}
+                            value={meeting.sentinela?.tema || ''}
                             onChange={(e) => handleNestedInputChange(meeting.id, 'sentinela', 'tema', e.target.value)}
                             className="w-full border rounded px-3 py-2"
                           />
@@ -899,7 +916,8 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
               )}
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );

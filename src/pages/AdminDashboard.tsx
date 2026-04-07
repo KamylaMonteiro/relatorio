@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, ShieldCheck, AlertCircle } from 'lucide-react';
 import MeetingModal from '../components/MeetingModal';
 import MemberModal from '../components/admin/MemberModal';
 import MembersListModal from '../components/admin/MembersListModal';
@@ -9,8 +9,8 @@ import MeetingsSection from '../components/admin/MeetingsSection';
 import MembersSection from '../components/admin/MembersSection';
 import FieldGroupsSection from '../components/admin/FieldGroupsSection';
 import DesignacaoSection from '../components/admin/designacao';
+import ReportsSection from '../components/admin/ReportsSection';
 import DataManager, { Meeting, Member } from '../utils/dataManager';
-
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = useState('meetings');
@@ -117,6 +117,7 @@ const AdminDashboard = () => {
           status: memberData.status,
           responsibilities: memberData.responsibilities || [],
           notes: memberData.notes || '',
+          codigo_acesso: memberData.codigo_acesso || '',
         });
       }
       await loadData();
@@ -128,12 +129,9 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleDeleteMember = async (id: string) => {
-    const member = members.find(m => m.id === id);
-    if (confirm(`Tem certeza que deseja excluir ${member ? member.name : 'este membro'}?`)) {
-      await dataManager.deleteMember(id);
-      await loadData();
-    }
+  const handleDeleteMember = async () => {
+    // Deletion + confirmation is handled inside MembersListModal - just refresh data here
+    await loadData();
   };
 
   const handleEditMeeting = (meeting: Meeting) => {
@@ -141,10 +139,7 @@ const AdminDashboard = () => {
     setShowMeetingModal(true);
   };
 
-  const handleNewMeeting = () => {
-    setEditingMeeting(null);
-    setShowMeetingModal(true);
-  };
+
 
   const handleNewMember = (category?: string) => {
     setEditingMember(null);
@@ -195,11 +190,15 @@ const AdminDashboard = () => {
         );
       case 'fieldGroups':
         return (
-          <FieldGroupsSection members={members} onDataChange={loadData} />
+          <FieldGroupsSection onDataChange={loadData} />
         );
       case 'designacoes':
         return (
           <DesignacaoSection />
+        );
+      case 'relatorios':
+        return (
+          <ReportsSection />
         );
       default:
         return null;
@@ -207,31 +206,43 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-green-800 text-white px-4 py-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-xl font-bold">Painel Administrativo</h1>
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Header */}
+      <header className="bg-gradient-to-r from-green-800 to-emerald-700 text-white px-6 py-3.5 shadow-md flex-shrink-0">
+        <div className="flex justify-between items-center max-w-screen-2xl mx-auto">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-white/15 rounded-xl flex items-center justify-center">
+              <ShieldCheck size={18} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-base font-bold leading-none">Painel Administrativo</h1>
+              <p className="text-green-200 text-xs mt-0.5 leading-none">Congregação</p>
+            </div>
           </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-2 bg-green-700 rounded hover:bg-green-600 transition-colors"
+            className="flex items-center gap-2 px-3.5 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-sm font-medium transition-all border border-white/10"
           >
-            <LogOut size={16} />
+            <LogOut size={14} />
             Sair
           </button>
         </div>
       </header>
 
-      <div className="flex flex-col md:flex-row">
+      {/* Body */}
+      <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
         <Sidebar
           activeSection={activeSection}
           setActiveSection={setActiveSection}
-          onLogout={handleLogout}
         />
 
-        <main className="flex-1 p-6">
-          {loadingError && <div className="text-red-500 mb-4">{loadingError}</div>}
+        <main className="flex-1 p-6 overflow-y-auto">
+          {loadingError && (
+            <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm">
+              <AlertCircle size={16} className="flex-shrink-0" />
+              {loadingError}
+            </div>
+          )}
           {renderContent()}
         </main>
       </div>
@@ -242,8 +253,15 @@ const AdminDashboard = () => {
           setShowMeetingModal(false);
           setEditingMeeting(null);
         }}
-        onSave={handleSaveMeeting}
-        editingMeeting={editingMeeting}
+        onSave={handleSaveMeeting as any}
+        editingMeeting={editingMeeting as any}
+        getCombinedAssignments={() => {
+          // Mock implementation or fetch from dataManager if available
+          return [];
+        }}
+        filterNames={(names, searchText) => {
+          return names.filter(n => n.toLowerCase().includes(searchText.toLowerCase()));
+        }}
       />
 
       <MemberModal

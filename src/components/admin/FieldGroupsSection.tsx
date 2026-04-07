@@ -1,32 +1,54 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, Edit, Trash2, MapPin, Clock, Users, Map, Loader2 } from 'lucide-react';
-import DataManager, { Member, FieldGroup, Territory, GroupMember } from '../../utils/dataManager';
+import { useState, useEffect, FC } from 'react';
+import {
+  Plus, Edit, Trash2, MapPin, Clock, Users, Map,
+  Loader2, X, RefreshCw, AlertCircle, Home
+} from 'lucide-react';
+import DataManager, { FieldGroup, Territory, GroupMember } from '../../utils/dataManager';
 
 interface FieldGroupsSectionProps {
-  members: Member[];
   onDataChange: () => void;
 }
 
-const FieldGroupsSection: React.FC<FieldGroupsSectionProps> = ({ members, onDataChange }) => {
+
+
+const InputField: FC<{
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  required?: boolean;
+  accentClass?: string;
+}> = ({ label, value, onChange, placeholder, required, accentClass = 'focus:ring-green-500 focus:border-green-500' }) => (
+  <div>
+    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+      {label}{required && <span className="text-red-400 ml-0.5">*</span>}
+    </label>
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={`w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 bg-gray-50 focus:bg-white focus:ring-2 outline-none transition-all ${accentClass}`}
+    />
+  </div>
+);
+
+const FieldGroupsSection: FC<FieldGroupsSectionProps> = ({ onDataChange }) => {
   const dataManager = DataManager.getInstance();
   const [activeTab, setActiveTab] = useState('grupos');
   const [groups, setGroups] = useState<FieldGroup[]>([]);
   const [territories, setTerritories] = useState<Territory[]>([]);
   const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
-  
-  // Estados para modais
+
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
   const [showAddTerritoryModal, setShowAddTerritoryModal] = useState(false);
   const [showBulkAddMemberModal, setShowBulkAddMemberModal] = useState(false);
-  
-  // Estados para formulários
+
   const [newGroupName, setNewGroupName] = useState('');
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
   const [territory, setTerritory] = useState('');
   const [meetingTime, setMeetingTime] = useState('');
   const [meetingLocation, setMeetingLocation] = useState('');
-  
-  // Estados para territórios
+
   const [territoryForm, setTerritoryForm] = useState({
     id: '',
     nome: '',
@@ -35,341 +57,151 @@ const FieldGroupsSection: React.FC<FieldGroupsSectionProps> = ({ members, onData
     ultimaVisita: '',
     proximaVisita: '',
     descricao: '',
-    observacoes: ''
+    observacoes: '',
   });
 
-  // Estados para membros dos grupos
   const predefinedGroups = ['Salão Do Reino', 'Jardim Tropical Ville', 'Despraiado', 'Jardim Novo Colorado'];
   const [bulkMemberInput, setBulkMemberInput] = useState('');
   const [bulkGroupAssignment, setBulkGroupAssignment] = useState<string[]>([]);
   const [editingGroupName, setEditingGroupName] = useState<string | null>(null);
-
   const [editingGroup, setEditingGroup] = useState<FieldGroup | null>(null);
   const [editingTerritory, setEditingTerritory] = useState<Territory | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  // Estado simplificado para controlar o carregamento do salvamento
   const [isSaving, setIsSaving] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, [dataManager]);
+  useEffect(() => { loadData(); }, [dataManager]);
 
   const loadData = async () => {
     setIsLoading(true);
     setError(null);
     try {
       await dataManager.loadAllDataFromCloud();
-      
       const [loadedGroups, loadedTerritories, loadedGroupMembers] = await Promise.all([
         dataManager.getFieldGroups(),
         dataManager.getTerritories(),
-        dataManager.getGroupMembers()
+        dataManager.getGroupMembers(),
       ]);
-      
-      console.log('Membros carregados do DataManager por grupo:', loadedGroupMembers.reduce((acc, member) => {
-        acc[member.groupName] = acc[member.groupName] || [];
-        acc[member.groupName].push(member.name);
-        return acc;
-      }, {} as Record<string, string[]>)); // Log detalhado por grupo
       setGroups(loadedGroups || []);
       setTerritories(loadedTerritories || []);
       setGroupMembers(loadedGroupMembers || []);
-    } catch (error) {
-      console.error('Error loading data:', error);
+    } catch {
       setError('Erro ao carregar dados. Verifique sua conexão e tente novamente.');
     } finally {
       setIsLoading(false);
     }
   };
 
-  const resetGroupForm = () => {
-    setNewGroupName('');
-    setSelectedMembers([]);
-    setTerritory('');
-    setMeetingTime('');
-    setMeetingLocation('');
-    setEditingGroup(null);
-  };
+  const resetGroupForm = () => { setNewGroupName(''); setTerritory(''); setMeetingTime(''); setMeetingLocation(''); setEditingGroup(null); };
+  const resetTerritoryForm = () => { setTerritoryForm({ id: '', nome: '', responsavel: '', status: 'Disponível', ultimaVisita: '', proximaVisita: '', descricao: '', observacoes: '' }); setEditingTerritory(null); };
+  const resetBulkMemberForm = () => { setBulkMemberInput(''); setBulkGroupAssignment([]); setEditingGroupName(null); };
 
-  const resetTerritoryForm = () => {
-    setTerritoryForm({
-      id: '',
-      nome: '',
-      responsavel: '',
-      status: 'Disponível',
-      ultimaVisita: '',
-      proximaVisita: '',
-      descricao: '',
-      observacoes: ''
-    });
-    setEditingTerritory(null);
-  };
+  const generateUniqueId = (prefix = '') => `${prefix}${Date.now()}-${Math.random().toString(36).substring(2, 15)}-${Math.random().toString(36).substring(2, 9)}`;
+  const checkIfMemberIdExists = (id: string) => groupMembers.some((m) => m.id === id);
 
-  const resetBulkMemberForm = () => {
-    setBulkMemberInput('');
-    setBulkGroupAssignment([]);
-    setEditingGroupName(null);
-  };
-
-  const generateUniqueId = (prefix: string = ''): string => {
-    const timestamp = Date.now();
-    const randomPart = Math.random().toString(36).substring(2, 15);
-    const extraRandom = Math.random().toString(36).substring(2, 9);
-    return `${prefix}${timestamp}-${randomPart}-${extraRandom}`;
-  };
-
-  const checkIfMemberIdExists = (id: string): boolean => {
-    return groupMembers.some(member => member.id === id);
-  };
-
-  // Funções para grupos de campo
   const handleAddGroup = async () => {
-    if (!newGroupName.trim()) {
-      alert('Por favor, preencha o nome do grupo');
-      return;
-    }
-    const newGroup: FieldGroup = {
-      id: generateUniqueId('group_'),
-      name: newGroupName.trim(),
-      memberIds: [],
-      territory: territory.trim() || undefined,
-      meetingTime: meetingTime.trim() || undefined,
-      meetingLocation: meetingLocation.trim() || undefined,
-    };
-    try {
-      await dataManager.addFieldGroup(newGroup);
-      await loadData();
-      onDataChange();
-      setShowAddGroupModal(false);
-      resetGroupForm();
-    } catch (error) {
-      console.error('Error adding field group:', error);
-      alert('Erro ao adicionar grupo de campo');
-    }
+    if (!newGroupName.trim()) { alert('Por favor, preencha o nome do grupo'); return; }
+    const newGroup: FieldGroup = { id: generateUniqueId('group_'), name: newGroupName.trim(), memberIds: [], territory: territory.trim() || undefined, meetingTime: meetingTime.trim() || undefined, meetingLocation: meetingLocation.trim() || undefined };
+    try { await dataManager.addFieldGroup(newGroup); await loadData(); onDataChange(); setShowAddGroupModal(false); resetGroupForm(); }
+    catch { alert('Erro ao adicionar grupo de campo'); }
   };
 
-  const handleEditGroup = (group: FieldGroup) => {
-    setEditingGroup(group);
-    setNewGroupName(group.name);
-    setSelectedMembers(group.memberIds);
-    setTerritory(group.territory || '');
-    setMeetingTime(group.meetingTime || '');
-    setMeetingLocation(group.meetingLocation || '');
-    setShowAddGroupModal(true);
-  };
+  const handleEditGroup = (group: FieldGroup) => { setEditingGroup(group); setNewGroupName(group.name); setTerritory(group.territory || ''); setMeetingTime(group.meetingTime || ''); setMeetingLocation(group.meetingLocation || ''); setShowAddGroupModal(true); };
 
   const handleUpdateGroup = async () => {
-    if (!editingGroup || !newGroupName.trim()) {
-      alert('Por favor, preencha o nome do grupo');
-      return;
-    }
-    const updatedGroup: FieldGroup = {
-      ...editingGroup,
-      name: newGroupName.trim(),
-      memberIds: [],
-      territory: territory.trim() || undefined,
-      meetingTime: meetingTime.trim() || undefined,
-      meetingLocation: meetingLocation.trim() || undefined,
-    };
-    try {
-      await dataManager.updateFieldGroup(updatedGroup);
-      await loadData();
-      onDataChange();
-      setShowAddGroupModal(false);
-      resetGroupForm();
-    } catch (error) {
-      console.error('Error updating field group:', error);
-      alert('Erro ao atualizar grupo de campo');
-    }
+    if (!editingGroup || !newGroupName.trim()) { alert('Por favor, preencha o nome do grupo'); return; }
+    const updated: FieldGroup = { ...editingGroup, name: newGroupName.trim(), memberIds: [], territory: territory.trim() || undefined, meetingTime: meetingTime.trim() || undefined, meetingLocation: meetingLocation.trim() || undefined };
+    try { await dataManager.updateFieldGroup(updated); await loadData(); onDataChange(); setShowAddGroupModal(false); resetGroupForm(); }
+    catch { alert('Erro ao atualizar grupo de campo'); }
   };
 
   const handleDeleteGroup = async (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este grupo de campo?')) {
-      try {
-        await dataManager.deleteFieldGroup(id);
-        await loadData();
-        onDataChange();
-      } catch (error) {
-        console.error('Error deleting field group:', error);
-        alert('Erro ao excluir grupo de campo');
-      }
-    }
+    if (confirm('Tem certeza que deseja excluir este grupo de campo?'))
+      try { await dataManager.deleteFieldGroup(id); await loadData(); onDataChange(); }
+      catch { alert('Erro ao excluir grupo de campo'); }
   };
 
-  // Funções para territórios
-  const checkIfTerritoryIdExists = (id: string, excludeId?: string): boolean => {
-    return territories.some(t => t.id === id && t.id !== excludeId);
-  };
-
-  const generateTerritoryId = (): string => generateUniqueId('territory_');
+  const checkIfTerritoryIdExists = (id: string, excludeId?: string) => territories.some((t) => t.id === id && t.id !== excludeId);
 
   const handleAddTerritory = async () => {
-    if (!territoryForm.nome.trim()) {
-      alert('Por favor, preencha o nome do território');
-      return;
-    }
-    const finalId = territoryForm.id.trim() || generateTerritoryId();
-    if (territoryForm.id.trim() && checkIfTerritoryIdExists(finalId)) {
-      alert('Este ID de território já existe. Por favor, escolha um ID diferente ou deixe vazio para gerar automaticamente.');
-      return;
-    }
-    const newTerritory: Territory = { ...territoryForm, id: finalId };
-    try {
-      await dataManager.addTerritory(newTerritory);
-      await loadData();
-      setShowAddTerritoryModal(false);
-      resetTerritoryForm();
-    } catch (error) {
-      console.error('Error adding territory:', error);
-      alert('Erro ao adicionar território');
-    }
+    if (!territoryForm.nome.trim()) { alert('Por favor, preencha o nome do território'); return; }
+    const finalId = territoryForm.id.trim() || generateUniqueId('territory_');
+    if (territoryForm.id.trim() && checkIfTerritoryIdExists(finalId)) { alert('Este ID já existe.'); return; }
+    try { await dataManager.addTerritory({ ...territoryForm, id: finalId }); await loadData(); setShowAddTerritoryModal(false); resetTerritoryForm(); }
+    catch { alert('Erro ao adicionar território'); }
   };
 
-  const handleEditTerritory = (territory: Territory) => {
-    setEditingTerritory(territory);
-    setTerritoryForm(territory);
-    setShowAddTerritoryModal(true);
-  };
+  const handleEditTerritory = (t: Territory) => { setEditingTerritory(t); setTerritoryForm({ id: t.id || '', nome: t.nome || '', responsavel: t.responsavel || '', status: t.status || 'Disponível', ultimaVisita: t.ultimaVisita || '', proximaVisita: t.proximaVisita || '', descricao: t.descricao || '', observacoes: t.observacoes || '' }); setShowAddTerritoryModal(true); };
 
   const handleUpdateTerritory = async () => {
-    if (!editingTerritory || !territoryForm.nome.trim()) {
-      alert('Por favor, preencha o nome do território');
-      return;
-    }
+    if (!editingTerritory || !territoryForm.nome.trim()) { alert('Por favor, preencha o nome do território'); return; }
     const finalId = territoryForm.id.trim() || editingTerritory.id;
-    if (finalId !== editingTerritory.id && checkIfTerritoryIdExists(finalId)) {
-      alert('Este ID de território já existe. Por favor, escolha um ID diferente.');
-      return;
-    }
-    const updatedTerritory: Territory = { ...territoryForm, id: finalId };
+    if (finalId !== editingTerritory.id && checkIfTerritoryIdExists(finalId)) { alert('Este ID já existe.'); return; }
     try {
-      if (finalId !== editingTerritory.id) {
-        await dataManager.deleteTerritory(editingTerritory.id);
-        await dataManager.addTerritory(updatedTerritory);
-      } else {
-        await dataManager.updateTerritory(updatedTerritory);
-      }
-      await loadData();
-      setShowAddTerritoryModal(false);
-      resetTerritoryForm();
-    } catch (error) {
-      console.error('Error updating territory:', error);
-      alert('Erro ao atualizar território');
-    }
+      if (finalId !== editingTerritory.id) { await dataManager.deleteTerritory(editingTerritory.id); await dataManager.addTerritory({ ...territoryForm, id: finalId }); }
+      else { await dataManager.updateTerritory({ ...territoryForm, id: finalId }); }
+      await loadData(); setShowAddTerritoryModal(false); resetTerritoryForm();
+    } catch { alert('Erro ao atualizar território'); }
   };
 
   const handleDeleteTerritory = async (id: string) => {
-    if (confirm('Tem certeza que deseja excluir este território?')) {
-      try {
-        await dataManager.deleteTerritory(id);
-        await loadData();
-      } catch (error) {
-        console.error('Error deleting territory:', error);
-        alert('Erro ao excluir território');
-      }
-    }
+    if (confirm('Tem certeza que deseja excluir este território?'))
+      try { await dataManager.deleteTerritory(id); await loadData(); }
+      catch { alert('Erro ao excluir território'); }
   };
 
   const handleEditGroupMembers = (groupName: string) => {
-    const membersOfGroup = groupMembers
-      .filter(member => member.groupName === groupName && member.isActive)
-      .map(member => member.name)
-      .join('\n');
-    
-    setEditingGroupName(groupName);
-    setBulkMemberInput(membersOfGroup);
-    setBulkGroupAssignment([groupName]);
-    setShowBulkAddMemberModal(true);
+    const names = groupMembers.filter((m) => m.groupName === groupName && m.isActive).map((m) => m.name).join('\n');
+    setEditingGroupName(groupName); setBulkMemberInput(names); setBulkGroupAssignment([groupName]); setShowBulkAddMemberModal(true);
   };
 
   const handleBulkAddMembers = async () => {
-    const names = bulkMemberInput.split('\n').map(name => name.trim()).filter(name => name);
+    const names = bulkMemberInput.split('\n').map((n) => n.trim()).filter(Boolean);
     const targetGroupName = bulkGroupAssignment[0];
-
-    if (!targetGroupName) {
-      alert('Por favor, selecione um grupo.');
-      return;
-    }
-
+    if (!targetGroupName) { alert('Por favor, selecione um grupo.'); return; }
     setIsSaving(true);
-
     try {
-      // Remove todos os membros antigos apenas do grupo alvo
-      const oldMembers = groupMembers.filter(m => m.groupName === targetGroupName);
-      for (const member of oldMembers) {
+      for (const member of groupMembers.filter((m) => m.groupName === targetGroupName))
         await dataManager.deleteGroupMember(member.id);
+      const newMembers: GroupMember[] = [];
+      for (const name of names) {
+        let uniqueId = ''; let attempts = 0;
+        do { uniqueId = generateUniqueId('member_'); attempts++; } while (checkIfMemberIdExists(uniqueId) && attempts < 10);
+        const nm: GroupMember = { id: uniqueId, name, groupName: targetGroupName, role: '', isActive: true };
+        newMembers.push(nm); await dataManager.addGroupMember(nm);
       }
-
-      // Adiciona os novos membros apenas para o grupo alvo, preservando a ordem
-      if (names.length > 0) {
-        const newMembers: GroupMember[] = [];
-        for (let i = 0; i < names.length; i++) {
-          let uniqueId: string;
-          let attempts = 0;
-          const maxAttempts = 10;
-          
-          do {
-            uniqueId = generateUniqueId('member_');
-            attempts++;
-          } while (checkIfMemberIdExists(uniqueId) && attempts < maxAttempts);
-          
-          if (attempts >= maxAttempts) {
-            console.error('Não foi possível gerar um ID único após várias tentativas');
-            alert('Erro interno: não foi possível gerar ID único. Tente novamente.');
-            setIsSaving(false);
-            return;
-          }
-
-          const newMember: GroupMember = {
-            id: uniqueId,
-            name: names[i],
-            groupName: targetGroupName,
-            role: '',
-            isActive: true
-          };
-          newMembers.push(newMember);
-          await dataManager.addGroupMember(newMember);
-        }
-        // Atualiza o estado local apenas para o grupo afetado
-        setGroupMembers(prev => [
-          ...prev.filter(m => m.groupName !== targetGroupName),
-          ...newMembers
-        ]);
-      }
-
-      await loadData();
-      onDataChange();
-
-      setIsSaving(false);
-      setShowBulkAddMemberModal(false);
-      resetBulkMemberForm();
-    } catch (error) {
-      console.error('Error processing bulk members:', error);
-      alert('Erro ao processar a lista de membros. Verifique se não há nomes duplicados.');
-      setIsSaving(false);
-    }
+      setGroupMembers((prev) => [...prev.filter((m) => m.groupName !== targetGroupName), ...newMembers]);
+      await loadData(); 
+      setShowBulkAddMemberModal(false); resetBulkMemberForm();
+    } catch { alert('Erro ao processar a lista de membros.'); }
+    finally { setIsSaving(false); }
   };
+
+  const TABS = [
+    { id: 'grupos', label: 'Grupos de Campo', icon: <MapPin size={15} />, count: groups.length },
+    { id: 'territorios', label: 'Territórios', icon: <Map size={15} />, count: territories.length },
+    { id: 'lista-grupos', label: 'Membros dos Grupos', icon: <Users size={15} />, count: groupMembers.filter(m => m.isActive).length },
+  ];
 
   if (isLoading) {
     return (
-      <div className="p-4 flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-4 border-gray-100 border-t-green-600 mx-auto mb-3" />
+          <p className="text-gray-500 text-sm">Carregando dados...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="p-4">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-600">{error}</p>
-          <button 
-            onClick={loadData}
-            className="mt-2 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-          >
-            Tentar Novamente
+      <div className="max-w-xl mx-auto mt-8">
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-6 flex flex-col items-center gap-3 text-center">
+          <AlertCircle size={32} className="text-red-400" />
+          <p className="text-red-700 font-medium">{error}</p>
+          <button onClick={loadData} className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-xl text-sm font-medium transition-colors">
+            <RefreshCw size={14} /> Tentar Novamente
           </button>
         </div>
       </div>
@@ -377,164 +209,253 @@ const FieldGroupsSection: React.FC<FieldGroupsSectionProps> = ({ members, onData
   }
 
   return (
-    <div className="p-4">
-      <div className="flex justify-between items-center mb-6">
-      </div>
-
-      {/* Tabs */}
-      <div className="bg-white border-b mb-6">
-        <div className="flex overflow-x-auto">
-          <button
-            onClick={() => setActiveTab('grupos')}
-            className={`flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap ${
-              activeTab === 'grupos'
-                ? 'text-green-600 border-b-2 border-green-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <MapPin size={16} className="inline mr-2" />
-            Grupos de Campo
-          </button>
-          <button
-            onClick={() => setActiveTab('territorios')}
-            className={`flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap ${
-              activeTab === 'territorios'
-                ? 'text-green-600 border-b-2 border-green-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Map size={16} className="inline mr-2" />
-            Territórios
-          </button>
-          <button
-            onClick={() => setActiveTab('lista-grupos')}
-            className={`flex-shrink-0 px-4 py-3 text-sm font-medium whitespace-nowrap ${
-              activeTab === 'lista-grupos'
-                ? 'text-green-600 border-b-2 border-green-600'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            <Users size={16} className="inline mr-2" />
-            Membros dos Grupos
-          </button>
+    <div className="max-w-6xl mx-auto">
+      {/* Page Header */}
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">Grupos de Campo</h2>
         </div>
       </div>
 
-      {/* Conteúdo das Tabs */}
+      {/* Tab Bar */}
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-2xl mb-6 w-fit">
+        {TABS.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setActiveTab(tab.id)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${activeTab === tab.id
+              ? 'bg-white text-gray-800 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+              }`}
+          >
+            {tab.icon}
+            {tab.label}
+            <span className={`text-xs px-1.5 py-0.5 rounded-full font-semibold ${activeTab === tab.id ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'
+              }`}>
+              {tab.count}
+            </span>
+          </button>
+        ))}
+      </div>
+
+      {/* ── TAB: Grupos de Campo ── */}
       {activeTab === 'grupos' && (
         <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Grupos de Campo</h3>
+          <div className="flex justify-between items-center mb-5">
+            <p className="text-sm text-gray-500">{groups.length} {groups.length === 1 ? 'grupo cadastrado' : 'grupos cadastrados'}</p>
             <button
-              onClick={() => {
-                resetGroupForm();
-                setShowAddGroupModal(true);
-              }}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center gap-2 transition-colors"
+              onClick={() => { resetGroupForm(); setShowAddGroupModal(true); }}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm"
             >
-              <Plus size={16} />
-              Novo Grupo
+              <Plus size={15} /> Novo Grupo
             </button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {groups.map((group) => (
-              <div key={group.id} className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-lg font-semibold text-green-800">{group.name}</h3>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleEditGroup(group)} className="text-blue-600 hover:text-blue-800 p-1 rounded" title="Editar grupo"><Edit size={16} /></button>
-                    <button onClick={() => handleDeleteGroup(group.id)} className="text-red-600 hover:text-red-800 p-1 rounded" title="Excluir grupo"><Trash2 size={16} /></button>
+
+          {groups.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-gray-300">
+              <MapPin size={48} className="mb-3" />
+              <p className="text-base font-medium text-gray-400">Nenhum grupo cadastrado</p>
+              <p className="text-sm text-gray-300 mt-1">Clique em "Novo Grupo" para começar</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {groups.map((group) => (
+                <div key={group.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200">
+                  {/* Card top accent */}
+                  <div className="h-1.5 bg-gradient-to-r from-green-500 to-emerald-400" />
+                  <div className="p-5">
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
+                          <MapPin size={18} />
+                        </div>
+                        <h3 className="font-bold text-gray-800 leading-tight">{group.name}</h3>
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={() => handleEditGroup(group)} className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-all" title="Editar"><Edit size={15} /></button>
+                        <button onClick={() => handleDeleteGroup(group.id)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-all" title="Excluir"><Trash2 size={15} /></button>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      {group.territory && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-1.5">
+                          <MapPin size={13} className="text-green-500 flex-shrink-0" />
+                          <span className="font-medium text-gray-500 min-w-fit">Território:</span>
+                          <span className="truncate">{group.territory}</span>
+                        </div>
+                      )}
+                      {group.meetingTime && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-1.5">
+                          <Clock size={13} className="text-green-500 flex-shrink-0" />
+                          <span className="font-medium text-gray-500 min-w-fit">Horário:</span>
+                          <span className="truncate">{group.meetingTime}</span>
+                        </div>
+                      )}
+                      {group.meetingLocation && (
+                        <div className="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-1.5">
+                          <Home size={13} className="text-green-500 flex-shrink-0" />
+                          <span className="font-medium text-gray-500 min-w-fit">Local:</span>
+                          <span className="truncate">{group.meetingLocation}</span>
+                        </div>
+                      )}
+                      {!group.territory && !group.meetingTime && !group.meetingLocation && (
+                        <p className="text-xs text-gray-300 italic px-1">Nenhuma informação adicional</p>
+                      )}
+                    </div>
                   </div>
                 </div>
-                <div className="space-y-3">
-                  {group.territory && <div className="flex items-center gap-2 text-gray-700"><MapPin size={16} className="text-green-600" /><span className="text-sm"><strong>Território:</strong> {group.territory}</span></div>}
-                  {group.meetingTime && <div className="flex items-center gap-2 text-gray-700"><Clock size={16} className="text-green-600" /><span className="text-sm"><strong>Horário:</strong> {group.meetingTime}</span></div>}
-                  {group.meetingLocation && <div className="flex items-center gap-2 text-gray-700"><MapPin size={16} className="text-green-600" /><span className="text-sm"><strong>Local:</strong> {group.meetingLocation}</span></div>}
-                </div>
-              </div>
-            ))}
-          </div>
-          {groups.length === 0 && (
-            <div className="text-center py-12">
-              <MapPin size={48} className="mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-500 mb-2">Nenhum grupo de campo encontrado</h3>
+              ))}
             </div>
           )}
         </div>
       )}
 
+      {/* ── TAB: Territórios ── */}
       {activeTab === 'territorios' && (
         <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Territórios</h3>
-            <button onClick={() => { resetTerritoryForm(); setShowAddTerritoryModal(true); }} className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2 transition-colors"><Plus size={16} />Novo Território</button>
+          <div className="flex justify-between items-center mb-5">
+            <p className="text-sm text-gray-500">{territories.length} {territories.length === 1 ? 'território cadastrado' : 'territórios cadastrados'}</p>
+            <button
+              onClick={() => { resetTerritoryForm(); setShowAddTerritoryModal(true); }}
+              className="flex items-center gap-2 bg-sky-600 hover:bg-sky-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors shadow-sm"
+            >
+              <Plus size={15} /> Novo Território
+            </button>
           </div>
-          <div className="grid gap-4">
-            {territories.map((territory) => (
-              <div key={territory.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <div className="px-4 py-3 bg-gradient-to-r from-blue-500 to-blue-600 flex justify-between items-center">
-                  <div>
-                    <h3 className="font-bold text-white">{territory.nome}</h3>
-                    <span className="text-xs bg-white bg-opacity-20 px-2 py-1 rounded text-white">{territory.id}</span>
+
+          {territories.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-gray-300">
+              <Map size={48} className="mb-3" />
+              <p className="text-base font-medium text-gray-400">Nenhum território cadastrado</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {territories.map((t) => {
+                return (
+                  <div key={t.id} className="bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition-all duration-300">
+                    {/* Blue Header */}
+                    <div className="bg-blue-600 px-5 py-3.5 flex justify-between items-center">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white backdrop-blur-sm">
+                          <Map size={16} />
+                        </div>
+                        <h3 className="font-bold text-white text-lg tracking-tight">{t.nome}</h3>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleEditTerritory(t)}
+                          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all"
+                          title="Editar"
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTerritory(t.id)}
+                          className="w-8 h-8 rounded-lg bg-white/10 hover:bg-red-500/30 text-white flex items-center justify-center transition-all"
+                          title="Excluir"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Content Body */}
+                    <div className="p-5">
+                      {/* Top Grid */}
+                      <div className="grid grid-cols-3 gap-4 mb-5">
+                        <div className="space-y-1">
+                          <p className="text-xs font-semibold text-gray-500">Responsável:</p>
+                          <p className="text-sm font-bold text-gray-800 truncate">{t.responsavel || 'Não definido'}</p>
+                        </div>
+                        <div className="space-y-1 text-center">
+                          <p className="text-xs font-semibold text-gray-500">Status:</p>
+                          <p className={`text-sm font-bold ${t.status === 'Disponível' ? 'text-emerald-600' : t.status === 'Em andamento' ? 'text-amber-600' : 'text-sky-600'}`}>
+                            {t.status}
+                          </p>
+                        </div>
+                        <div className="space-y-1 text-right">
+                          <p className="text-xs font-semibold text-gray-500">Última Visita:</p>
+                          <p className="text-sm font-bold text-gray-800">{t.ultimaVisita || '—'}</p>
+                        </div>
+                      </div>
+
+                      {/* Divider */}
+                      <div className="border-t border-gray-100 my-4" />
+
+                      {/* Bottom Info */}
+                      <div className="space-y-1">
+                        <p className="text-xs font-semibold text-gray-500">Próxima Visita Prevista:</p>
+                        <p className="text-sm font-bold text-blue-600">{t.proximaVisita || 'Não agendada'}</p>
+                      </div>
+
+                      {t.descricao && (
+                        <div className="mt-4 pt-4 border-t border-gray-50">
+                          <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400 mb-1">Descrição</p>
+                          <p className="text-xs text-gray-600 italic line-clamp-2">{t.descricao}</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => handleEditTerritory(territory)} className="text-white hover:text-blue-200 p-1 rounded" title="Editar território"><Edit size={16} /></button>
-                    <button onClick={() => handleDeleteTerritory(territory.id)} className="text-white hover:text-red-200 p-1 rounded" title="Excluir território"><Trash2 size={16} /></button>
-                  </div>
-                </div>
-                <div className="p-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div><span className="text-sm font-medium text-gray-600">Responsável:</span><p className="text-sm font-semibold text-gray-800">{territory.responsavel || '--'}</p></div>
-                    <div><span className="text-sm font-medium text-gray-600">Status:</span><p className={`text-sm font-semibold ${territory.status === 'Disponível' ? 'text-green-600' : territory.status === 'Em andamento' ? 'text-yellow-600' : 'text-blue-600'}`}>{territory.status}</p></div>
-                    <div><span className="text-sm font-medium text-gray-600">Última Visita:</span><p className="text-sm text-gray-800">{territory.ultimaVisita || '--'}</p></div>
-                  </div>
-                  {territory.proximaVisita && <div className="mt-3 pt-3 border-t"><span className="text-sm font-medium text-gray-600">Próxima Visita Prevista:</span><p className="text-sm text-blue-600 font-semibold">{territory.proximaVisita}</p></div>}
-                  {territory.descricao && <div className="mt-3 pt-3 border-t"><span className="text-sm font-medium text-gray-600">Descrição:</span><p className="text-sm text-gray-700">{territory.descricao}</p></div>}
-                </div>
-              </div>
-            ))}
-          </div>
-          {territories.length === 0 && (
-            <div className="text-center py-12">
-              <Map size={48} className="mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-500 mb-2">Nenhum território encontrado</h3>
+                );
+              })}
             </div>
           )}
         </div>
       )}
 
+      {/* ── TAB: Membros dos Grupos ── */}
       {activeTab === 'lista-grupos' && (
         <div>
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Membros dos Grupos</h3>
-          </div>
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <p className="text-sm text-gray-500 mb-5">
+            {groupMembers.filter((m) => m.isActive).length} membros distribuídos em {predefinedGroups.length} grupos
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
             {predefinedGroups.map((groupName) => {
-              const currentMembers = groupMembers.filter(member => member.groupName === groupName && member.isActive);
+              const members = groupMembers.filter((m) => m.groupName === groupName && m.isActive);
               return (
-                <div key={groupName} className="bg-white rounded-lg shadow-md p-4 flex flex-col">
-                  <div className="flex justify-between items-center mb-4">
-                    <h4 className="text-md font-semibold text-gray-800">{groupName}</h4>
-                    <button
-                      onClick={() => handleEditGroupMembers(groupName)}
-                      className="text-blue-500 hover:text-blue-700 p-1"
-                      title={`Editar membros de ${groupName}`}
-                      disabled={isSaving}
-                    >
-                      <Edit size={16} />
-                    </button>
+                <div key={groupName} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200 flex flex-col">
+                  {/* Header */}
+                  <div className="bg-gradient-to-br from-green-600 to-emerald-700 px-4 py-3.5">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-white font-bold text-sm leading-tight">{groupName}</h4>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs bg-white/20 text-white font-semibold px-2 py-0.5 rounded-full">
+                          {members.length}
+                        </span>
+                        <button
+                          onClick={() => handleEditGroupMembers(groupName)}
+                          className="text-white/80 hover:text-white p-1 rounded-lg hover:bg-white/20 transition-all"
+                          disabled={isSaving}
+                          title="Editar membros"
+                        >
+                          <Edit size={14} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <ul className="list-disc pl-5 space-y-2 flex-grow">
-                    {currentMembers.length > 0 ? (
-                      currentMembers.map((member) => (
-                        <li key={member.id} className="text-sm text-gray-700">
-                          {member.name} {member.role && `(${member.role})`}
-                        </li>
-                      ))
+
+                  {/* Member list */}
+                  <div className="p-3 flex-1">
+                    {members.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-6 text-gray-300">
+                        <Users size={24} className="mb-1" />
+                        <p className="text-xs">Sem membros</p>
+                      </div>
                     ) : (
-                      <li className="text-sm text-gray-500 list-none"></li>
+                      <ul className="space-y-1">
+                        {members.map((member, idx) => (
+                          <li key={member.id} className="flex items-center gap-2 py-1.5 px-2 rounded-lg hover:bg-gray-50 transition-colors">
+                            <span className="text-xs text-gray-300 font-bold w-4 text-right select-none">{idx + 1}</span>
+                            <span className="text-sm text-gray-700 leading-tight">
+                              {member.name}
+                              {member.role && <span className="ml-1 text-xs text-gray-400">({member.role})</span>}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
                     )}
-                  </ul>
+                  </div>
                 </div>
               );
             })}
@@ -542,151 +463,135 @@ const FieldGroupsSection: React.FC<FieldGroupsSectionProps> = ({ members, onData
         </div>
       )}
 
+      {/* ── MODAL: Grupo ── */}
       {showAddGroupModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
-            <h3 className="text-lg font-bold mb-4 text-gray-800">{editingGroup ? 'Editar Grupo de Campo' : 'Novo Grupo de Campo'}</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={(e) => { if (e.target === e.currentTarget) { setShowAddGroupModal(false); resetGroupForm(); } }}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold text-gray-800">{editingGroup ? 'Editar Grupo' : 'Novo Grupo de Campo'}</h3>
+              <button onClick={() => { setShowAddGroupModal(false); resetGroupForm(); }} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-all"><X size={18} /></button>
+            </div>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Grupo *</label>
-                <input type="text" value={newGroupName} onChange={(e) => setNewGroupName(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"/>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Território</label>
-                <input type="text" value={territory} onChange={(e) => setTerritory(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"/>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Horário</label>
-                  <input type="text" value={meetingTime} onChange={(e) => setMeetingTime(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"/>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Local de Encontro</label>
-                  <input type="text" value={meetingLocation} onChange={(e) => setMeetingLocation(e.target.value)} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"/>
-                </div>
+              <InputField label="Nome do Grupo" value={newGroupName} onChange={setNewGroupName} required placeholder="" />
+              <InputField label="Território" value={territory} onChange={setTerritory} placeholder="" />
+              <div className="grid grid-cols-2 gap-3">
+                <InputField label="Horário" value={meetingTime} onChange={setMeetingTime} placeholder="" />
+                <InputField label="Local de Encontro" value={meetingLocation} onChange={setMeetingLocation} placeholder="" />
               </div>
             </div>
-            <div className="flex gap-2 mt-6">
-              <button onClick={editingGroup ? handleUpdateGroup : handleAddGroup} className="flex-1 bg-green-600 text-white py-2 rounded hover:bg-green-700 transition-colors">{editingGroup ? 'Atualizar' : 'Criar'} Grupo</button>
-              <button onClick={() => { setShowAddGroupModal(false); resetGroupForm(); }} className="flex-1 bg-gray-500 text-white py-2 rounded hover:bg-gray-600 transition-colors">Cancelar</button>
+            <div className="flex gap-3 mt-6">
+              <button onClick={editingGroup ? handleUpdateGroup : handleAddGroup} className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                {editingGroup ? 'Atualizar' : 'Criar'} Grupo
+              </button>
+              <button onClick={() => { setShowAddGroupModal(false); resetGroupForm(); }} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                Cancelar
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* ── MODAL: Território ── */}
       {showAddTerritoryModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold mb-4 text-gray-800">{editingTerritory ? 'Editar Território' : 'Novo Território'}</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={(e) => { if (e.target === e.currentTarget) { setShowAddTerritoryModal(false); resetTerritoryForm(); } }}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold text-gray-800">{editingTerritory ? 'Editar Território' : 'Novo Território'}</h3>
+              <button onClick={() => { setShowAddTerritoryModal(false); resetTerritoryForm(); }} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-all"><X size={18} /></button>
+            </div>
             <div className="space-y-4">
+              <InputField label="ID do Território (opcional)" value={territoryForm.id} onChange={(v) => setTerritoryForm({ ...territoryForm, id: v })} accentClass="focus:ring-sky-500 focus:border-sky-500" />
+              <InputField label="Nome do Território" value={territoryForm.nome} onChange={(v) => setTerritoryForm({ ...territoryForm, nome: v })} required accentClass="focus:ring-sky-500 focus:border-sky-500" />
+              <InputField label="Responsável" value={territoryForm.responsavel} onChange={(v) => setTerritoryForm({ ...territoryForm, responsavel: v })} accentClass="focus:ring-sky-500 focus:border-sky-500" />
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ID do Território (opcional)</label>
-                <input type="text" value={territoryForm.id} onChange={(e) => setTerritoryForm({...territoryForm, id: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome do Território *</label>
-                <input type="text" value={territoryForm.nome} onChange={(e) => setTerritoryForm({...territoryForm, nome: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Responsável</label>
-                <input type="text" value={territoryForm.responsavel} onChange={(e) => setTerritoryForm({...territoryForm, responsavel: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                <select value={territoryForm.status} onChange={(e) => setTerritoryForm({...territoryForm, status: e.target.value as any})} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Status</label>
+                <select
+                  value={territoryForm.status}
+                  onChange={(e) => setTerritoryForm({ ...territoryForm, status: e.target.value as any })}
+                  className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all"
+                >
                   <option value="Disponível">Disponível</option>
                   <option value="Em andamento">Em andamento</option>
                   <option value="Trabalhado">Trabalhado</option>
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Última Visita</label>
-                  <input type="text" value={territoryForm.ultimaVisita} onChange={(e) => setTerritoryForm({...territoryForm, ultimaVisita: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="dd/mm/aaaa" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Próxima Visita</label>
-                  <input type="text" value={territoryForm.proximaVisita} onChange={(e) => setTerritoryForm({...territoryForm, proximaVisita: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" placeholder="dd/mm/aaaa" />
-                </div>
+              <div className="grid grid-cols-2 gap-3">
+                <InputField label="Última Visita" value={territoryForm.ultimaVisita} onChange={(v) => setTerritoryForm({ ...territoryForm, ultimaVisita: v })} placeholder="dd/mm/aaaa" accentClass="focus:ring-sky-500 focus:border-sky-500" />
+                <InputField label="Próxima Visita" value={territoryForm.proximaVisita} onChange={(v) => setTerritoryForm({ ...territoryForm, proximaVisita: v })} placeholder="dd/mm/aaaa" accentClass="focus:ring-sky-500 focus:border-sky-500" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
-                <textarea value={territoryForm.observacoes} onChange={(e) => setTerritoryForm({...territoryForm, observacoes: e.target.value})} className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500" rows={2} />
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Observações</label>
+                <textarea
+                  value={territoryForm.observacoes}
+                  onChange={(e) => setTerritoryForm({ ...territoryForm, observacoes: e.target.value })}
+                  className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-sky-500 focus:border-sky-500 outline-none transition-all resize-none"
+                  rows={3}
+                />
               </div>
             </div>
-            <div className="flex gap-2 mt-6">
-              <button onClick={editingTerritory ? handleUpdateTerritory : handleAddTerritory} className="flex-1 bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition-colors">{editingTerritory ? 'Atualizar' : 'Criar'} Território</button>
-              <button onClick={() => { setShowAddTerritoryModal(false); resetTerritoryForm(); }} className="flex-1 bg-gray-500 text-white py-2 rounded hover:bg-gray-600 transition-colors">Cancelar</button>
+            <div className="flex gap-3 mt-6">
+              <button onClick={editingTerritory ? handleUpdateTerritory : handleAddTerritory} className="flex-1 bg-sky-600 hover:bg-sky-700 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                {editingTerritory ? 'Atualizar' : 'Criar'} Território
+              </button>
+              <button onClick={() => { setShowAddTerritoryModal(false); resetTerritoryForm(); }} className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2.5 rounded-xl text-sm font-semibold transition-colors">
+                Cancelar
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* ── MODAL: Membros em Massa ── */}
       {showBulkAddMemberModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
-            <h3 className="text-lg font-bold mb-4 text-gray-800">
-              {editingGroupName ? `Editar Membros do Grupo: ${editingGroupName}` : 'Adicionar Membros em Massa'}
-            </h3>
-            
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={(e) => { if (e.target === e.currentTarget) { setShowBulkAddMemberModal(false); resetBulkMemberForm(); } }}>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold text-gray-800">
+                {editingGroupName ? `Membros — ${editingGroupName}` : 'Adicionar Membros'}
+              </h3>
+              <button onClick={() => { setShowBulkAddMemberModal(false); resetBulkMemberForm(); }} className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition-all"><X size={18} /></button>
+            </div>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nomes (um por linha)</label>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                  Nomes <span className="normal-case text-gray-400 font-normal">(um por linha)</span>
+                </label>
                 <textarea
                   value={bulkMemberInput}
                   onChange={(e) => setBulkMemberInput(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  className="w-full border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm text-gray-800 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition-all resize-none"
                   rows={10}
                 />
               </div>
               {!editingGroupName && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Atribuir aos Grupos</label>
+                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Atribuir ao Grupo</label>
                   <select
                     multiple
                     value={bulkGroupAssignment}
-                    onChange={(e) =>
-                      setBulkGroupAssignment(
-                        Array.from(e.target.selectedOptions, (option) => option.value)
-                      )
-                    }
-                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    onChange={(e) => setBulkGroupAssignment(Array.from(e.target.selectedOptions, (o) => o.value))}
+                    className="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-sm text-gray-800 bg-gray-50 focus:ring-2 focus:ring-green-500 outline-none"
                     size={predefinedGroups.length > 5 ? 5 : predefinedGroups.length}
                     disabled={isSaving}
                   >
-                    {predefinedGroups.map((group) => (
-                      <option key={group} value={group}>
-                        {group}
-                      </option>
-                    ))}
+                    {predefinedGroups.map((g) => <option key={g} value={g}>{g}</option>)}
                   </select>
                 </div>
               )}
             </div>
-            <div className="flex gap-2 mt-6">
+            <div className="flex gap-3 mt-6">
               <button
                 onClick={handleBulkAddMembers}
                 disabled={isSaving}
-                className={`flex-1 py-2 rounded transition-colors flex items-center justify-center gap-2 ${
-                  isSaving 
-                    ? 'bg-gray-400 text-white cursor-not-allowed' 
-                    : 'bg-green-600 text-white hover:bg-green-700'
-                }`}
+                className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white py-2.5 rounded-xl text-sm font-semibold transition-colors"
               >
-                {isSaving && <Loader2 className="animate-spin" size={16} />}
-                {isSaving 
-                  ? 'Salvando...' 
-                  : (editingGroupName ? 'Salvar Alterações' : 'Adicionar Membros')
-                }
+                {isSaving && <Loader2 size={15} className="animate-spin" />}
+                {isSaving ? 'Salvando...' : (editingGroupName ? 'Salvar Alterações' : 'Adicionar Membros')}
               </button>
               <button
                 onClick={() => { setShowBulkAddMemberModal(false); resetBulkMemberForm(); }}
                 disabled={isSaving}
-                className={`flex-1 py-2 rounded transition-colors ${
-                  isSaving 
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
-                    : 'bg-gray-500 text-white hover:bg-gray-600'
-                }`}
+                className="flex-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 text-gray-700 py-2.5 rounded-xl text-sm font-semibold transition-colors"
               >
                 Cancelar
               </button>

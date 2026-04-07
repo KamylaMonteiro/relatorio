@@ -1,4 +1,3 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import ReuniaoMeioSemana from './pages/ReuniaoMeioSemana';
@@ -7,6 +6,8 @@ import Donativos from './pages/Donativos';
 import GruposCampo from './pages/GruposCampo';
 import Login from './pages/Login';
 import AdminDashboard from './pages/AdminDashboard';
+
+import Relatorio from './pages/Relatorio';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           <Route path="/grupos-de-campo" element={<GruposCampo />} />
           <Route path="/grupos-campo" element={<GruposCampo />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/relatorio" element={<Relatorio />} />
           <Route path="/admin" element={<AdminDashboard />} />
         </Routes>
       </div>

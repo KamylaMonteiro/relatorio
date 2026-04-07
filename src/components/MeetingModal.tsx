@@ -71,7 +71,6 @@ interface MeetingModalProps {
   onClose: () => void;
   onSave: (meeting: Meeting) => void;
   editingMeeting?: Meeting | null;
-  assignments: any[]; // Adicionado para receber as designações
   getCombinedAssignments: (categories: string[]) => string[]; // Adicionado para receber a função
   filterNames: (names: string[], searchText: string) => string[]; // Adicionado para receber a função
 }
@@ -81,7 +80,6 @@ const MeetingModal: React.FC<MeetingModalProps> = ({
   onClose,
   onSave,
   editingMeeting,
-  assignments,
   getCombinedAssignments,
   filterNames,
 }) => {
@@ -204,11 +202,21 @@ const MeetingModal: React.FC<MeetingModalProps> = ({
   };
 
   const handleTypeChange = (type: 'meio-semana' | 'fim-semana') => {
+    const baseMeeting = {
+      id: meetingData.id,
+      date: meetingData.date,
+      status: meetingData.status,
+      audioVideo: meetingData.audioVideo,
+      indicador: meetingData.indicador,
+      indicadorPalco: meetingData.indicadorPalco,
+      microfoneVolante: meetingData.microfoneVolante,
+      limpeza: meetingData.limpeza,
+    };
+
     if (type === 'meio-semana') {
       setMeetingData({
-        ...meetingData,
+        ...baseMeeting,
         type: 'meio-semana',
-        presidente: undefined,
         presidencia: (meetingData as MidweekMeeting).presidencia || '',
         canticoInicial: (meetingData as MidweekMeeting).canticoInicial || '',
         oracao: (meetingData as MidweekMeeting).oracao || '',
@@ -221,25 +229,14 @@ const MeetingModal: React.FC<MeetingModalProps> = ({
           (meetingData as MidweekMeeting).joiasEspirituais || '',
         leituraBiblia: (meetingData as MidweekMeeting).leituraBiblia || '',
         ministerio: (meetingData as MidweekMeeting).ministerio || [
-          {
-            tipo: 'Iniciando conversas',
-            tempo: '1',
-            estudante: '',
-            ajudante: '',
-          },
-          {
-            tipo: 'Cultivando o interesse',
-            tempo: '3',
-            estudante: '',
-            ajudante: '',
-          },
+          { tipo: 'Iniciando conversas', tempo: '1', estudante: '', ajudante: '' },
+          { tipo: 'Cultivando o interesse', tempo: '3', estudante: '', ajudante: '' },
           { tipo: 'Discurso', tempo: '5', estudante: '' },
         ],
         canticoMeio: (meetingData as MidweekMeeting).canticoMeio || '',
         responsavelCanticoMeio:
           (meetingData as MidweekMeeting).responsavelCanticoMeio || '',
-        necessidadesLocais: (meetingData as MidweekMeeting)
-          .necessidadesLocais || { tema: '', designado: '' },
+        necessidadesLocais: (meetingData as MidweekMeeting).necessidadesLocais || { tema: '', designado: '' },
         estudoBiblico: (meetingData as MidweekMeeting).estudoBiblico || {
           designado: '',
           ajudante: '',
@@ -252,7 +249,7 @@ const MeetingModal: React.FC<MeetingModalProps> = ({
       } as MidweekMeeting);
     } else {
       setMeetingData({
-        ...meetingData,
+        ...baseMeeting,
         type: 'fim-semana',
         presidente: (meetingData as WeekendMeeting).presidente || '',
         discursoPublico: (meetingData as WeekendMeeting).discursoPublico || {
@@ -265,22 +262,6 @@ const MeetingModal: React.FC<MeetingModalProps> = ({
           dirigente: '',
           leitor: '',
         },
-        presidencia: undefined,
-        canticoInicial: undefined,
-        oracao: undefined,
-        comentariosIniciais: undefined,
-        temaTesouro: undefined,
-        designadoTesouro: undefined,
-        joiasEspirituais: undefined,
-        leituraBiblia: undefined,
-        ministerio: undefined,
-        canticoMeio: undefined,
-        responsavelCanticoMeio: undefined,
-        necessidadesLocais: undefined,
-        estudoBiblico: undefined,
-        comentariosFinais: undefined,
-        canticoFinal: undefined,
-        numeroCanticoFinal: undefined,
       } as WeekendMeeting);
     }
   };

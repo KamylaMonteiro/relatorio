@@ -58,6 +58,17 @@ export interface Meeting {
   };
 }
 
+export interface Report {
+  id: string;
+  member_id: string;
+  member_name: string;
+  month: string;
+  horas_trabalhadas?: number;
+  estudo_biblico?: string;
+  ativo?: string;
+  created_at?: string;
+}
+
 export interface Member {
   id: string;
   name: string;
@@ -73,6 +84,7 @@ export interface Member {
   status?: 'ativo' | 'inativo';
   responsibilities?: string[];
   notes?: string;
+  codigo_acesso?: string;
 }
 
 export interface FieldGroup {
@@ -176,10 +188,7 @@ class DataManager {
     if (!this.useSupabase || !supabase) return;
 
     try {
-      // Primeiro, limpa a tabela
-      await supabase.from(table).delete().neq('id', '');
-
-      // Depois, insere os novos dados se houver
+      // Usar upsert em vez de delete + insert para evitar problemas de chave estrangeira
       if (data.length > 0) {
         // Para a tabela meetings, agora mantemos os objetos como estão (JSONB nativo)
         const processedData = data.map((item) => {
@@ -222,11 +231,21 @@ class DataManager {
           return processed;
         });
 
-        const { error } = await supabase.from(table).insert(processedData);
+        const { error } = await supabase.from(table).upsert(processedData);
         if (error) {
-          console.error(`Erro detalhado ao inserir em ${table}:`, error);
+          console.error(`Erro detalhado ao fazer upsert em ${table}:`, error);
           throw error;
         }
+
+        // Remove registros que foram deletados localmente
+        const localIds = data.map(item => item.id).filter(Boolean);
+        if (localIds.length > 0) {
+          // Apenas tenta deletar os que não existem mais (pode falhar silenciosamente se houver Foreign Keys restrict)
+          await supabase.from(table).delete().not('id', 'in', `(${localIds.join(',')})`);
+        }
+      } else {
+        // Se a lista local está vazia, o usuário apagou todos os itens.
+        await supabase.from(table).delete().neq('id', '');
       }
     } catch (error) {
       console.error(`Erro ao sincronizar ${table} com Supabase:`, error);
@@ -382,6 +401,17 @@ class DataManager {
   }
 
   async deleteMember(id: string): Promise<void> {
+    // Primeiro remove relatórios vinculados para evitar erro de Foreign Key
+    try {
+      const reports = await this.getReports();
+      const remainingReports = reports.filter(r => r.member_id !== id);
+      if (reports.length !== remainingReports.length) {
+        await this.saveReports(remainingReports);
+      }
+    } catch (error) {
+      console.warn('Erro ao tentar limpar relatórios do membro:', error);
+    }
+
     const members = await this.getMembers();
     const filteredMembers = members.filter((m) => m.id !== id);
     await this.saveMembers(filteredMembers);
@@ -437,6 +467,43 @@ class DataManager {
     const fieldGroups = await this.getFieldGroups();
     const filteredFieldGroups = fieldGroups.filter((fg) => fg.id !== id);
     await this.saveFieldGroups(filteredFieldGroups);
+  }
+
+  // Gerenciamento de Relatórios
+  async getReports(): Promise<Report[]> {
+    await this.waitForInitialization();
+
+    if (this.useSupabase) {
+      try {
+        const supabaseData = await this.loadFromSupabase('reports');
+        if (supabaseData.length >= 0) {
+          this.saveToLocalStorage('reports', supabaseData);
+          return supabaseData;
+        }
+      } catch (error) {
+        console.error('Erro ao carregar relatórios do Supabase:', error);
+      }
+    }
+
+    return this.getFromLocalStorage('reports');
+  }
+
+  async saveReports(reports: Report[]): Promise<void> {
+    this.saveToLocalStorage('reports', reports);
+
+    if (this.useSupabase) {
+      try {
+        await this.syncToSupabase('reports', reports);
+      } catch (error) {
+        console.error('Erro ao sincronizar relatórios:', error);
+      }
+    }
+  }
+
+  async addReport(report: Report): Promise<void> {
+    const reports = await this.getReports();
+    reports.push(report);
+    await this.saveReports(reports);
   }
 
   // Gerenciamento de Designações
@@ -650,6 +717,7 @@ class DataManager {
       const assignments = this.getFromLocalStorage('assignments');
       const territories = this.getFromLocalStorage('territories');
       const groupMembers = this.getFromLocalStorage('groupMembers');
+      const reports = this.getFromLocalStorage('reports');
 
       await Promise.all([
         this.syncToSupabase('meetings', meetings),
@@ -658,6 +726,7 @@ class DataManager {
         this.syncToSupabase('assignments', assignments),
         this.syncToSupabase('territories', territories),
         this.syncToSupabase('group_members', groupMembers),
+        this.syncToSupabase('reports', reports),
       ]);
 
       console.log('Sincronização completa realizada com sucesso!');
@@ -681,6 +750,7 @@ class DataManager {
         assignments,
         territories,
         groupMembers,
+        reports,
       ] = await Promise.all([
         this.loadFromSupabase('meetings'),
         this.loadFromSupabase('members'),
@@ -688,6 +758,7 @@ class DataManager {
         this.loadFromSupabase('assignments'),
         this.loadFromSupabase('territories'),
         this.loadFromSupabase('group_members'),
+        this.loadFromSupabase('reports'),
       ]);
 
       // Salva todos os dados carregados no localStorage
@@ -697,6 +768,7 @@ class DataManager {
       this.saveToLocalStorage('assignments', assignments);
       this.saveToLocalStorage('territories', territories);
       this.saveToLocalStorage('groupMembers', groupMembers);
+      this.saveToLocalStorage('reports', reports);
 
       // Executa limpeza automática após carregar os dados
       await this.cleanupPastMeetings();
