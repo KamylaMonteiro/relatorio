@@ -233,9 +233,9 @@ const ReportsSection = () => {
     if (confirm(`Tem certeza que deseja excluir ${name}? (O acesso e os relatórios deste usuário serão removidos permanentemente.)`)) {
       try {
         const memberToDelete = members.find(m => m.id === id);
-        
+
         await dataManager.deleteMember(id);
-        
+
         // Also delete the linked general member if it exists
         if (memberToDelete?.alternate_id) {
           try {
@@ -244,7 +244,7 @@ const ReportsSection = () => {
             console.warn('Erro ao deletar membro vinculado:', altError);
           }
         }
-        
+
         await loadData();
       } catch (error) {
         console.error('Erro ao deletar membro:', error);
@@ -287,72 +287,71 @@ const ReportsSection = () => {
   ] as const;
 
   return (
-    <div className="p-4 md:p-6 pb-20 md:pb-6">
+    <div className="p-3 md:p-6 max-w-full">
       {/* Header hero */}
-      <div className="bg-gradient-to-br from-green-700 via-green-600 to-emerald-600 rounded-2xl p-4 md:p-6 mb-6 text-white shadow-lg border border-green-500/20">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-          <div className="text-center lg:text-left">
-            <h2 className="text-2xl md:text-3xl font-bold tracking-tight mb-1 drop-shadow-sm">
+      <div className="bg-gradient-to-r from-green-700 to-emerald-600 rounded-2xl p-6 mb-6 text-white shadow-lg">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight mb-1">
               Relatórios de Serviço
             </h2>
-            <p className="text-green-100 text-xs md:text-sm font-medium opacity-90 uppercase tracking-widest">Painel de Controle</p>
           </div>
-          <div className="grid grid-cols-3 gap-2 sm:gap-4 w-full lg:w-auto">
-            <div className="bg-white/15 rounded-2xl px-2 py-3 md:px-5 md:py-3 text-center backdrop-blur-md border border-white/10 shadow-inner transition-transform hover:scale-[1.02]">
-              <p className="text-xl md:text-2xl font-black">{currentTabMembers.length}</p>
-              <p className="text-[9px] md:text-xs text-green-100 font-bold uppercase tracking-tighter sm:tracking-normal">Cadastrados</p>
+          <div className="grid grid-cols-3 gap-2 md:flex md:gap-4">
+            <div className="bg-white/20 rounded-xl p-2 md:px-4 md:py-2 text-center backdrop-blur-sm flex flex-col justify-center min-w-0">
+              <p className="text-xl md:text-2xl font-bold truncate">{currentTabMembers.length}</p>
+              <p className="text-[10px] md:text-xs text-green-100 uppercase font-semibold">Cadastrados</p>
             </div>
-            <div className="bg-white/15 rounded-2xl px-2 py-3 md:px-5 md:py-3 text-center backdrop-blur-md border border-white/10 shadow-inner transition-transform hover:scale-[1.02]">
-              <p className="text-xl md:text-2xl font-black">
+            <div className="bg-white/20 rounded-xl p-2 md:px-4 md:py-2 text-center backdrop-blur-sm flex flex-col justify-center min-w-0">
+              <p className="text-xl md:text-2xl font-bold truncate text-white">
                 {currentTabMembers.filter(m => getLatestReportForMember(m.id) !== null).length}
               </p>
-              <p className="text-[9px] md:text-xs text-green-100 font-bold uppercase tracking-tighter sm:tracking-normal">Relataram</p>
+              <p className="text-[10px] md:text-xs text-green-100 uppercase font-semibold">Relataram</p>
             </div>
-            <div className="bg-white/15 rounded-2xl px-2 py-3 md:px-5 md:py-3 text-center backdrop-blur-md border border-white/10 shadow-inner transition-transform hover:scale-[1.02]">
-              <p className="text-xl md:text-2xl font-black">
+            <div className="bg-white/20 rounded-xl p-2 md:px-4 md:py-2 text-center backdrop-blur-sm flex flex-col justify-center min-w-0 border border-white/10">
+              <p className="text-xl md:text-2xl font-bold truncate text-amber-200">
                 {currentTabMembers.filter(m => getLatestReportForMember(m.id) === null).length}
               </p>
-              <p className="text-[9px] md:text-xs text-green-100 font-bold uppercase tracking-tighter sm:tracking-normal text-amber-200">Pendentes</p>
+              <p className="text-[10px] md:text-xs text-green-100 uppercase font-semibold">Pendentes</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs - Scrollable on mobile */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-none no-scrollbar">
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 overflow-x-auto pb-2 scrollbar-hide -mx-1 px-1">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all whitespace-nowrap shadow-sm border ${activeTab === tab.id
-              ? 'bg-green-600 text-white border-green-600 shadow-green-200 shadow-md scale-105'
-              : 'bg-white text-gray-500 hover:bg-green-50 hover:text-green-700 border-gray-200'
+            className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition-all shadow-sm whitespace-nowrap flex-shrink-0 ${activeTab === tab.id
+              ? 'bg-green-600 text-white shadow-green-200 shadow-md scale-105'
+              : 'bg-white text-gray-600 hover:bg-green-50 hover:text-green-700 border border-gray-200'
               }`}
           >
-            <Users size={16} />
+            <Users size={14} />
             {tab.label}
           </button>
         ))}
       </div>
 
       {/* Filters + Action bar */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-6">
-        <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center justify-between">
-          <div className="flex flex-col sm:flex-row gap-3 flex-1">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 md:p-4 mb-6">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row gap-2 w-full">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input
                 type="text"
                 placeholder="Buscar por nome..."
                 value={filterName}
                 onChange={(e) => setFilterName(e.target.value)}
-                className="pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm w-full focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50/50 transition-all font-medium"
+                className="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-full focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50"
               />
             </div>
             <select
               value={selectedFilterMonth}
               onChange={(e) => setSelectedFilterMonth(e.target.value)}
-              className="px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50/50 text-gray-700 font-bold appearance-none cursor-pointer"
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-gray-50 text-gray-700 h-[40px]"
             >
               {getFilterMonths().map(m => (
                 <option key={m.value} value={m.value}>{m.label}</option>
@@ -361,251 +360,162 @@ const ReportsSection = () => {
           </div>
           <button
             onClick={handleOpenAddModal}
-            className="bg-green-600 text-white px-6 py-3 rounded-xl hover:bg-green-700 flex items-center justify-center gap-2.5 transition-all text-sm font-bold shadow-md hover:shadow-lg active:scale-95 active:bg-green-800"
+            className="bg-green-600 text-white px-5 py-2.5 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2 transition-all text-sm font-semibold shadow-sm hover:shadow-md w-full sm:w-auto"
           >
-            <Plus size={18} />
+            <Plus size={16} />
             Adicionar {tabs.find(t => t.id === activeTab)?.label}
           </button>
         </div>
       </div>
 
-      {/* Data Section */}
-      <div className="space-y-4">
+      {/* Table */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 py-20 flex flex-col items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mb-4"></div>
-            <p className="text-gray-500 font-medium">Sincronizando relatórios...</p>
-          </div>
-        ) : currentTabMembers.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 py-20 text-center">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-gray-100">
-              <Users size={32} className="text-gray-200" />
+          <div className="flex items-center justify-center py-16">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600 mx-auto mb-3"></div>
+              <p className="text-gray-500 text-sm">Carregando dados...</p>
             </div>
-            <h3 className="text-lg font-bold text-gray-800">Nenhum registro encontrado</h3>
-            <p className="text-gray-400 text-sm mt-1 mb-6">Comece adicionando o primeiro {tabs.find(t => t.id === activeTab)?.label.toLowerCase()}.</p>
-            <button
-              onClick={handleOpenAddModal}
-              className="inline-flex items-center gap-2 text-green-600 font-bold text-sm hover:underline"
-            >
-              <Plus size={16} /> Cadastrar agora
-            </button>
           </div>
         ) : (
-          <>
-            {/* Desktop View (Table) - Hidden on Mobile */}
-            <div className="hidden lg:block bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-gray-50/50 border-b border-gray-100">
-                      <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest">Membro</th>
-                      <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest">Acesso</th>
-                      {activeTab === 'pioneiro' ? (
-                        <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest">Horas</th>
-                      ) : (
-                        <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest">Ministério</th>
-                      )}
-                      <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest">Estudos</th>
-                      {activeTab === 'pioneiro' && (
-                        <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest">Identificação</th>
-                      )}
-                      <th className="py-4 px-6 text-xs font-black text-gray-400 uppercase tracking-widest text-right">Controles</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {currentTabMembers.map((member) => {
-                      const latestReport = getLatestReportForMember(member.id);
-                      const hasReport = latestReport !== null;
-                      return (
-                        <tr key={member.id} className="hover:bg-green-50/20 transition-colors group">
-                          <td className="py-4 px-6">
-                            <div className="flex items-center gap-3">
-                              <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-sm font-black shadow-sm flex-shrink-0 transition-all ${hasReport ? 'bg-green-600 text-white shadow-green-100 translate-y-[-1px]' : 'bg-gray-100 text-gray-400 grayscale'
-                                }`}>
-                                {member.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-bold text-gray-800 text-sm truncate">{member.name}</p>
-                                {!hasReport && (
-                                  <div className="flex items-center gap-1.5 mt-0.5">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-                                    <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider">Pendente</p>
-                                  </div>
-                                )}
-                              </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-100">
+                  <th className="py-3 px-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Nome</th>
+                  <th className="py-3 px-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Código</th>
+                  {activeTab === 'pioneiro' ? (
+                    <th className="py-3 px-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Horas</th>
+                  ) : (
+                    <th className="py-3 px-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Ativo</th>
+                  )}
+                  <th className="py-3 px-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Est. Bíblico</th>
+                  {activeTab === 'pioneiro' && (
+                    <th className="py-3 px-5 text-xs font-bold text-gray-500 uppercase tracking-wider">Tags</th>
+                  )}
+                  <th className="py-3 px-5 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {currentTabMembers.length === 0 ? (
+                  <tr>
+                    <td colSpan={activeTab === 'pioneiro' ? 6 : 5} className="text-center py-16">
+                      <div className="flex flex-col items-center text-gray-400">
+                        <Users size={40} className="mb-3 opacity-30" />
+                        <p className="font-medium">Nenhum registro encontrado</p>
+                        <p className="text-sm text-gray-400 mt-1">Clique em "Adicionar" para cadastrar um membro</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  currentTabMembers.map((member) => {
+                    const latestReport = getLatestReportForMember(member.id);
+                    const hasReport = latestReport !== null;
+                    return (
+                      <tr key={member.id} className="hover:bg-green-50/30 transition-colors group">
+                        <td className="py-3.5 px-5">
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${hasReport ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                              }`}>
+                              {member.name.charAt(0).toUpperCase()}
                             </div>
-                          </td>
-                          <td className="py-4 px-6">
-                            <span className="font-mono text-xs bg-gray-100 font-black text-gray-600 px-2.5 py-1.5 rounded-lg tracking-[0.2em]">
-                              {member.codigo_acesso || '—'}
-                            </span>
-                          </td>
-
-                          {activeTab === 'pioneiro' ? (
-                            <td className="py-4 px-6 text-sm">
-                              {latestReport && latestReport.horas_trabalhadas !== undefined ? (
-                                <span className="font-black text-green-700 text-base">
-                                  {Number(latestReport.horas_trabalhadas).toFixed(2).replace('.', ',')}
-                                  <span className="text-[10px] ml-0.5 opacity-60">HRS</span>
-                                </span>
-                              ) : (
-                                <span className="text-gray-300 italic text-xs font-medium">--:--</span>
-                              )}
-                            </td>
-                          ) : (
-                            <td className="py-4 px-6">
-                              {latestReport && latestReport.ativo ? (
-                                <span className={`px-3 py-1.5 rounded-lg text-xs font-black shadow-sm ${latestReport.ativo === 'Sim'
-                                  ? 'bg-green-50 text-green-600 border border-green-100'
-                                  : 'bg-red-50 text-red-600 border border-red-100'
-                                  }`}>
-                                  {latestReport.ativo === 'Sim' ? '✓ PARTICIPOU' : '✗ NÃO RELATOU'}
-                                </span>
-                              ) : <span className="text-gray-300 italic text-xs font-medium">Sem registro</span>}
-                            </td>
-                          )}
-
-                          <td className="py-4 px-6">
-                            {latestReport && latestReport.estudo_biblico ? (
-                              <div className="flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
-                                <span className="font-black text-gray-800">{latestReport.estudo_biblico}</span>
-                              </div>
-                            ) : (
-                              <span className="text-gray-300 italic text-xs font-medium">Nenhum</span>
-                            )}
-                          </td>
-
-                          {activeTab === 'pioneiro' && (
-                            <td className="py-4 px-6">
-                              <div className="flex flex-wrap gap-1.5">
-                                {member.responsibilities && member.responsibilities.length > 0 ? (
-                                  member.responsibilities.map((tagName, idx) => {
-                                    const tagInfo = availableTags.find(t => t.name === tagName);
-                                    const colors = tagInfo ? tagColors[tagInfo.colorIndex] : tagColors[0];
-                                    return (
-                                      <span
-                                        key={idx}
-                                        className={`px-2.5 py-1 ${colors.bg} ${colors.text} text-[10px] font-black rounded-lg uppercase tracking-wider border ${colors.border} shadow-sm`}
-                                      >
-                                        {tagName}
-                                      </span>
-                                    );
-                                  })
-                                ) : <span className="text-gray-200">—</span>}
-                              </div>
-                            </td>
-                          )}
-
-                          <td className="py-4 px-6 text-right">
-                            <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-all scale-95 group-hover:scale-100 translate-x-2 group-hover:translate-x-0">
-                              <button
-                                onClick={() => handleEditMember(member)}
-                                className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-blue-600 rounded-xl hover:bg-blue-50 transition-colors border border-transparent hover:border-blue-100"
-                                title="Editar membro"
-                              >
-                                <Edit size={16} />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteMember(member.id, member.name)}
-                                className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-red-600 rounded-xl hover:bg-red-50 transition-colors border border-transparent hover:border-red-100"
-                                title="Excluir membro"
-                              >
-                                <Trash2 size={16} />
-                              </button>
+                            <div>
+                              <p className="font-semibold text-gray-800 text-sm">{member.name}</p>
+                              {!hasReport && <p className="text-xs text-amber-500 font-medium">⏳ Aguardando relatório</p>}
                             </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Mobile View (Cards) - Shown only on Mobile */}
-            <div className="lg:hidden space-y-4">
-              {currentTabMembers.map((member) => {
-                const latestReport = getLatestReportForMember(member.id);
-                const hasReport = latestReport !== null;
-                return (
-                  <div key={member.id} className="bg-white rounded-2xl shadow-md border border-gray-100 p-4 active:scale-[0.98] transition-transform">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-black shadow-sm ${hasReport ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                          {member.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-gray-800 text-base">{member.name}</h4>
-                          <span className="font-mono text-[10px] bg-gray-100 font-bold text-gray-500 px-2 py-0.5 rounded tracking-widest">
+                          </div>
+                        </td>
+                        <td className="py-3.5 px-5">
+                          <span className="font-mono text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded font-bold tracking-widest">
                             {member.codigo_acesso || '—'}
                           </span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => handleEditMember(member)} className="p-2 text-blue-600 bg-blue-50 rounded-xl">
-                          <Edit size={18} />
-                        </button>
-                        <button onClick={() => handleDeleteMember(member.id, member.name)} className="p-2 text-red-600 bg-red-50 rounded-xl">
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    </div>
+                        </td>
 
-                    <div className="grid grid-cols-2 gap-3 pb-2">
-                      <div className="bg-gray-50/50 rounded-xl p-3 border border-gray-100">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">
-                          {activeTab === 'pioneiro' ? 'Horas' : 'Ministério'}
-                        </p>
                         {activeTab === 'pioneiro' ? (
-                          <p className="text-sm font-black text-green-700">
-                            {latestReport && latestReport.horas_trabalhadas !== undefined 
-                              ? Number(latestReport.horas_trabalhadas).toFixed(2).replace('.', ',') + 'h'
-                              : '00,00h'}
-                          </p>
+                          <td className="py-3.5 px-5">
+                            {latestReport && latestReport.horas_trabalhadas !== undefined ? (
+                              <span className="font-bold text-green-700 bg-green-50 px-2 py-1 rounded text-sm">
+                                {Number(latestReport.horas_trabalhadas).toFixed(2).replace('.', ',')}h
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 italic text-xs">Pendente</span>
+                            )}
+                          </td>
                         ) : (
-                          <div className={`text-[10px] font-black inline-block px-2 py-0.5 rounded ${latestReport?.ativo === 'Sim' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
-                            {latestReport?.ativo === 'Sim' ? 'PARTICIPOU' : 'PENDENTE'}
-                          </div>
+                          <td className="py-3.5 px-5">
+                            {latestReport && latestReport.ativo ? (
+                              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${latestReport.ativo === 'Sim'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-red-100 text-red-700'
+                                }`}>
+                                {latestReport.ativo === 'Sim' ? '✓ Sim' : '✗ Não'}
+                              </span>
+                            ) : <span className="text-gray-400 italic text-xs">Pendente</span>}
+                          </td>
                         )}
-                      </div>
-                      <div className="bg-gray-50/50 rounded-xl p-3 border border-gray-100">
-                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Estudos</p>
-                        <p className="text-sm font-black text-blue-700">
-                          {latestReport?.estudo_biblico || '0'}
-                        </p>
-                      </div>
-                    </div>
 
-                    {activeTab === 'pioneiro' && member.responsibilities && member.responsibilities.length > 0 && (
-                      <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-gray-50">
-                        {member.responsibilities.map((tagName, idx) => {
-                          const tagInfo = availableTags.find(t => t.name === tagName);
-                          const colors = tagInfo ? tagColors[tagInfo.colorIndex] : tagColors[0];
-                          return (
-                            <span key={idx} className={`px-2 py-0.5 ${colors.bg} ${colors.text} text-[9px] font-bold rounded-lg border ${colors.border}`}>
-                              {tagName}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                        <td className="py-3.5 px-5 text-sm text-gray-700">
+                          {latestReport && latestReport.estudo_biblico ? (
+                            <span className="font-medium">{latestReport.estudo_biblico}</span>
+                          ) : (
+                            <span className="text-gray-400 italic text-xs">Pendente</span>
+                          )}
+                        </td>
 
-            {/* Pagination / Summary */}
-            <div className="bg-white rounded-2xl p-4 border border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-3">
-              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Total: {currentTabMembers.length}</span>
-              <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
-                <div className="w-2 h-2 rounded-full bg-green-600 animate-pulse"></div>
-                <span className="text-xs text-green-700 font-black uppercase">
-                  {currentTabMembers.filter(m => getLatestReportForMember(m.id) !== null).length} Relatórios Enviados
+                        {activeTab === 'pioneiro' && (
+                          <td className="py-3.5 px-5">
+                            {member.responsibilities && member.responsibilities.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {member.responsibilities.map((tagName, idx) => {
+                                  const tagInfo = availableTags.find(t => t.name === tagName);
+                                  const colors = tagInfo ? tagColors[tagInfo.colorIndex] : tagColors[0];
+                                  return (
+                                    <span
+                                      key={idx}
+                                      className={`px-2 py-0.5 ${colors.bg} ${colors.text} text-[10px] font-bold rounded-full uppercase tracking-wider border ${colors.border}`}
+                                    >
+                                      {tagName}
+                                    </span>
+                                  );
+                                })}
+                              </div>
+                            ) : <span className="text-gray-300 text-xs">—</span>}
+                          </td>
+                        )}
+
+                        <td className="py-3.5 px-5 text-right">
+                          <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                            <button
+                              onClick={() => handleEditMember(member)}
+                              className="text-gray-400 hover:text-blue-600 p-1.5 rounded-lg hover:bg-blue-50"
+                              title="Editar"
+                            >
+                              <Edit size={15} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteMember(member.id, member.name)}
+                              className="text-gray-400 hover:text-red-600 p-1.5 rounded-lg hover:bg-red-50"
+                              title="Excluir"
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+            {currentTabMembers.length > 0 && (
+              <div className="px-5 py-3 border-t border-gray-100 bg-gray-50 text-xs text-gray-500 flex justify-between items-center">
+                <span>Exibindo {currentTabMembers.length} {currentTabMembers.length === 1 ? 'membro' : 'membros'}</span>
+                <span className="text-green-600 font-medium">
+                  {currentTabMembers.filter(m => getLatestReportForMember(m.id) !== null).length} relataram no mês
                 </span>
               </div>
-            </div>
-          </>
+            )}
+          </div>
         )}
       </div>
 

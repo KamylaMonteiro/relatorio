@@ -207,7 +207,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col w-full overflow-x-hidden">
       {/* Header */}
       <header className="bg-gradient-to-r from-green-800 to-emerald-700 text-white px-6 py-3.5 shadow-md flex-shrink-0">
         <div className="flex justify-between items-center max-w-screen-2xl mx-auto">
@@ -236,7 +236,7 @@ const AdminDashboard = () => {
           setActiveSection={setActiveSection}
         />
 
-        <main className="flex-1 p-6 overflow-y-auto">
+        <main className="flex-1 p-3 md:p-6 overflow-y-auto w-full">
           {loadingError && (
             <div className="flex items-center gap-2.5 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 mb-5 text-sm">
               <AlertCircle size={16} className="flex-shrink-0" />
