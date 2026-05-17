@@ -36,6 +36,12 @@ export interface Meeting {
   necessidadesLocais?: {
     tema: string;
     designado: string;
+    tempo?: string;
+    extras?: Array<{
+      tema: string;
+      designado: string;
+      tempo: string;
+    }>;
   };
   estudoBiblico?: {
     designado: string;

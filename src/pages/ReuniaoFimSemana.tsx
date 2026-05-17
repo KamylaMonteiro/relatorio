@@ -122,36 +122,36 @@ const ReuniaoFimSemana = () => {
       </div>
       <main className="p-4 max-w-4xl mx-auto">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="bg-blue-500 text-white px-4 py-3 text-center">
-            <h2 className="font-bold text-lg">Programação da Reunião de Fim de Semana</h2>
-            <p className="text-blue-100">{currentMeeting.date}</p>
-            <p className="text-blue-100 text-sm mt-1">Presidente: {currentMeeting.presidente}</p>
+          <div className="bg-blue-600 text-white px-4 py-5 text-center shadow-inner">
+            <h2 className="font-bold text-xl tracking-tight">Programação da Reunião de Fim de Semana</h2>
+            <p className="text-blue-100 font-medium mt-1">{currentMeeting.date}</p>
+            <p className="text-blue-50 text-base mt-2 font-semibold">Presidente: {currentMeeting.presidente}</p>
           </div>
           <div className="p-4 space-y-4">
             <div className="bg-gray-50 p-4 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="font-medium">Áudio e Vídeo - Suporte</span>
-                    <span>{currentMeeting.audioVideo}</span>
+                  <div className="flex justify-between border-b border-gray-200 pb-1">
+                    <span className="font-bold text-gray-700">Áudio e Vídeo - Suporte</span>
+                    <span className="font-medium text-gray-900">{currentMeeting.audioVideo}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">Indicador</span>
-                    <span>{currentMeeting.indicador}</span>
+                  <div className="flex justify-between border-b border-gray-200 pb-1">
+                    <span className="font-bold text-gray-700">Indicador</span>
+                    <span className="font-medium text-gray-900">{currentMeeting.indicador}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">Indicador de Palco</span>
-                    <span>{currentMeeting.indicadorPalco}</span>
+                  <div className="flex justify-between border-b border-gray-200 pb-1">
+                    <span className="font-bold text-gray-700">Indicador de Palco</span>
+                    <span className="font-medium text-gray-900">{currentMeeting.indicadorPalco}</span>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="font-medium">Microfone Volante</span>
-                    <span>{currentMeeting.microfoneVolante}</span>
+                  <div className="flex justify-between border-b border-gray-200 pb-1">
+                    <span className="font-bold text-gray-700">Microfone Volante</span>
+                    <span className="font-medium text-gray-900">{currentMeeting.microfoneVolante}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="font-medium">Limpeza</span>
-                    <span>{currentMeeting.limpeza}</span>
+                  <div className="flex justify-between border-b border-gray-200 pb-1">
+                    <span className="font-bold text-gray-700">Limpeza</span>
+                    <span className="font-medium text-gray-900">{currentMeeting.limpeza}</span>
                   </div>
                 </div>
               </div>

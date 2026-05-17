@@ -119,7 +119,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
             ],
             canticoMeio: existingMeeting.canticoMeio || '',
             responsavelCanticoMeio: existingMeeting.responsavelCanticoMeio || '',
-            necessidadesLocais: existingMeeting.necessidadesLocais || { tema: '', designado: '' },
+            necessidadesLocais: existingMeeting.necessidadesLocais || { tema: '', designado: '', tempo: '', extras: [] },
             estudoBiblico: existingMeeting.estudoBiblico || { designado: '', ajudante: '' },
             comentariosFinais: existingMeeting.comentariosFinais || '',
             canticoFinal: existingMeeting.canticoFinal || '',
@@ -161,7 +161,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
             ],
             canticoMeio: '',
             responsavelCanticoMeio: '',
-            necessidadesLocais: { tema: '', designado: '' },
+            necessidadesLocais: { tema: '', designado: '', tempo: '', extras: [] },
             estudoBiblico: { designado: '', ajudante: '' },
             comentariosFinais: '',
             canticoFinal: '',
@@ -245,12 +245,12 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
       prev.map(meeting =>
         meeting.id === id
           ? {
-              ...meeting,
-              [field]: {
-                ...(meeting[field as keyof Meeting] as object ?? {}),
-                [subField]: value,
-              },
-            }
+            ...meeting,
+            [field]: {
+              ...(meeting[field as keyof Meeting] as object ?? {}),
+              [subField]: value,
+            },
+          }
           : meeting
       )
     );
@@ -261,17 +261,17 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
       prev.map(meeting =>
         meeting.id === id && 'ministerio' in meeting
           ? {
-              ...meeting,
-              ministerio: (meeting.ministerio || []).map((item, i) =>
-                i === index
-                  ? {
-                      ...item,
-                      [field]: value,
-                      ...(field === 'tipo' && value === 'Discurso' ? { ajudante: '' } : {}),
-                    }
-                  : item
-              ),
-            }
+            ...meeting,
+            ministerio: (meeting.ministerio || []).map((item, i) =>
+              i === index
+                ? {
+                  ...item,
+                  [field]: value,
+                  ...(field === 'tipo' && value === 'Discurso' ? { ajudante: '' } : {}),
+                }
+                : item
+            ),
+          }
           : meeting
       )
     );
@@ -282,12 +282,12 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
       prev.map(meeting =>
         meeting.id === id && 'ministerio' in meeting
           ? {
-              ...meeting,
-              ministerio: [
-                ...(meeting.ministerio || []),
-                { tipo: '', tempo: '', estudante: '', ajudante: '' },
-              ],
-            }
+            ...meeting,
+            ministerio: [
+              ...(meeting.ministerio || []),
+              { tipo: '', tempo: '', estudante: '', ajudante: '' },
+            ],
+          }
           : meeting
       )
     );
@@ -298,9 +298,68 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
       prev.map(meeting =>
         meeting.id === id && 'ministerio' in meeting
           ? {
-              ...meeting,
-              ministerio: (meeting.ministerio || []).filter((_, i) => i !== index),
-            }
+            ...meeting,
+            ministerio: (meeting.ministerio || []).filter((_, i) => i !== index),
+          }
+          : meeting
+      )
+    );
+  };
+
+  const addNecessidadesLocaisItem = (id: string) => {
+    setDisplayMeetings(prev =>
+      prev.map(meeting =>
+        meeting.id === id && 'necessidadesLocais' in meeting
+          ? {
+            ...meeting,
+            necessidadesLocais: {
+              tema: meeting.necessidadesLocais?.tema || '',
+              designado: meeting.necessidadesLocais?.designado || '',
+              tempo: meeting.necessidadesLocais?.tempo || '',
+              extras: [
+                ...(meeting.necessidadesLocais?.extras || []),
+                { tema: '', designado: '', tempo: '' },
+              ],
+            },
+          }
+          : meeting
+      )
+    );
+  };
+
+  const removeNecessidadesLocaisItem = (id: string, index: number) => {
+    setDisplayMeetings(prev =>
+      prev.map(meeting =>
+        meeting.id === id && 'necessidadesLocais' in meeting
+          ? {
+            ...meeting,
+            necessidadesLocais: {
+              tema: meeting.necessidadesLocais?.tema || '',
+              designado: meeting.necessidadesLocais?.designado || '',
+              tempo: meeting.necessidadesLocais?.tempo || '',
+              extras: (meeting.necessidadesLocais?.extras || []).filter((_, i) => i !== index),
+            },
+          }
+          : meeting
+      )
+    );
+  };
+
+  const handleNecessidadesLocaisExtraChange = (id: string, index: number, field: string, value: string) => {
+    setDisplayMeetings(prev =>
+      prev.map(meeting =>
+        meeting.id === id && 'necessidadesLocais' in meeting
+          ? {
+            ...meeting,
+            necessidadesLocais: {
+              tema: meeting.necessidadesLocais?.tema || '',
+              designado: meeting.necessidadesLocais?.designado || '',
+              tempo: meeting.necessidadesLocais?.tempo || '',
+              extras: (meeting.necessidadesLocais?.extras || []).map((item, i) =>
+                i === index ? { ...item, [field]: value } : item
+              ),
+            },
+          }
           : meeting
       )
     );
@@ -336,7 +395,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
     const filteredNames = filterNames(allNames, value);
     const dropdownId = isNested ? `${field}-${subField}` : field;
     const shouldShowDropdown = showDropdown === dropdownId && (value.length > 0 || filteredNames.length > 0);
-    
+
     return (
       <div className="relative">
         <div className="flex">
@@ -404,7 +463,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
     const filteredNames = filterNames(allNames, value);
     const dropdownId = `ministerio-${index}-${field}`;
     const shouldShowDropdown = showDropdown === dropdownId && (value.length > 0 || filteredNames.length > 0);
-    
+
     return (
       <div className="relative">
         <div className="flex">
@@ -453,12 +512,77 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
     );
   };
 
+  const handleSelectNecessidadesLocaisExtraName = (id: string, index: number, field: string, name: string) => {
+    handleNecessidadesLocaisExtraChange(id, index, field, name);
+    setShowDropdown(null);
+  };
+
+  const renderNecessidadesLocaisExtraInputWithDropdown = (
+    id: string,
+    index: number,
+    field: string,
+    value: string,
+    categories: string[]
+  ) => {
+    const allNames = getCombinedAssignments(categories);
+    const filteredNames = filterNames(allNames, value);
+    const dropdownId = `necessidadesLocaisExtra-${index}-${field}`;
+    const shouldShowDropdown = showDropdown === dropdownId && (value.length > 0 || filteredNames.length > 0);
+
+    return (
+      <div className="relative">
+        <div className="flex">
+          <input
+            type="text"
+            value={value}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              handleNecessidadesLocaisExtraChange(id, index, field, newValue);
+              if (newValue.length > 0 && showDropdown !== dropdownId) {
+                setShowDropdown(dropdownId);
+              }
+            }}
+            onFocus={() => setShowDropdown(dropdownId)}
+            className="w-full border rounded px-3 py-2 pr-8"
+            placeholder="Digite para buscar..."
+          />
+          <button
+            type="button"
+            onClick={() => toggleDropdown(dropdownId)}
+            className="absolute right-0 top-0 h-full px-2 flex items-center justify-center"
+          >
+            <ChevronDown size={14} />
+          </button>
+        </div>
+        {shouldShowDropdown && (
+          <div className="absolute z-50 mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto" style={{ top: '100%' }}>
+            {filteredNames.length > 0 ? (
+              filteredNames.map((name, idx) => (
+                <div
+                  key={idx}
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                  onClick={() => handleSelectNecessidadesLocaisExtraName(id, index, field, name)}
+                >
+                  {name}
+                </div>
+              ))
+            ) : (
+              <div className="px-4 py-2 text-gray-500 text-xs">
+                {value.length > 0 ? 'Nenhum nome encontrado' : 'Digite para buscar nomes'}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderLimpezaDropdown = (id: string, value: string) => {
     const limpezaOptions = ['Salão Do Reino', 'Jardim Tropical Ville', 'Despraiado', 'Jardim Novo Colorado'];
     const filteredOptions = filterNames(limpezaOptions, value);
     const dropdownId = `limpeza`;
     const shouldShowDropdown = showDropdown === dropdownId && (value.length > 0 || filteredOptions.length > 0);
-    
+
     return (
       <div className="relative">
         <div className="flex">
@@ -542,11 +666,10 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
           <button
             key={tab}
             onClick={() => { setActiveTab(tab); setSelectedDate(''); }}
-            className={`px-5 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
-              activeTab === tab
-                ? 'bg-white text-gray-800 shadow-sm'
-                : 'text-gray-500 hover:text-gray-700'
-            }`}
+            className={`px-5 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${activeTab === tab
+              ? 'bg-white text-gray-800 shadow-sm'
+              : 'text-gray-500 hover:text-gray-700'
+              }`}
           >
             {tab === 'meio-semana' ? 'Meio de Semana' : 'Fim de Semana'}
           </button>
@@ -562,7 +685,7 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
           </div>
         ) : (
           <div className="space-y-6">
-          {displayMeetings.map((meeting) => (
+            {displayMeetings.map((meeting) => (
               <div key={meeting.id} className="border border-gray-100 rounded-2xl p-5 bg-gray-50/50">
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-2.5">
@@ -578,11 +701,10 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
                     <button
                       onClick={() => handleSaveMeeting(meeting)}
                       disabled={isSaving}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold transition-all ${
-                        isSaving
-                          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                          : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
-                      }`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold transition-all ${isSaving
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-green-600 hover:bg-green-700 text-white shadow-sm'
+                        }`}
                       title="Salvar"
                     >
                       {isSaving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
@@ -597,325 +719,392 @@ const MeetingsSection: React.FC<MeetingsSectionProps> = ({
                     </button>
                   </div>
                 </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {activeTab === 'fim-semana' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {activeTab === 'fim-semana' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Presidente</label>
+                      {renderNameInputWithDropdown(meeting.id, 'presidente', meeting.presidente || '', ['Ac'])}
+                    </div>
+                  )}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Presidente</label>
-                    {renderNameInputWithDropdown(meeting.id, 'presidente', meeting.presidente || '', ['Ac'])}
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Áudio e Vídeo</label>
+                    {renderNameInputWithDropdown(meeting.id, 'audioVideo', meeting.audioVideo, ['PubM'])}
                   </div>
-                )}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Áudio e Vídeo</label>
-                  {renderNameInputWithDropdown(meeting.id, 'audioVideo', meeting.audioVideo, ['PubM'])}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Indicador</label>
-                  {renderNameInputWithDropdown(meeting.id, 'indicador', meeting.indicador, ['PubM'])}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Indicador de Palco</label>
-                  {renderNameInputWithDropdown(meeting.id, 'indicadorPalco', meeting.indicadorPalco, ['PubM'])}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Microfone Volante</label>
-                  {renderNameInputWithDropdown(meeting.id, 'microfoneVolante', meeting.microfoneVolante, ['PubM'])}
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Limpeza</label>
-                  {renderLimpezaDropdown(meeting.id, meeting.limpeza)}
-                </div>
-              </div>
-              {activeTab === 'meio-semana' && 'presidencia' in meeting && (
-                <div className="mt-4">
-                  <div className="bg-blue-600 text-white px-4 py-3">
-                    <h5 className="font-bold">PRESIDÊNCIA</h5>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Indicador</label>
+                    {renderNameInputWithDropdown(meeting.id, 'indicador', meeting.indicador, ['PubM'])}
                   </div>
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Presidente</label>
-                        {renderNameInputWithDropdown(meeting.id, 'presidencia', meeting.presidencia || '', ['Ac'])}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Cântico Inicial</label>
-                        <input
-                          type="text"
-                          value={meeting.canticoInicial || ''}
-                          onChange={(e) => handleInputChange(meeting.id, 'canticoInicial', e.target.value)}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Oração</label>
-                        {renderNameInputWithDropdown(meeting.id, 'oracao', meeting.oracao || '', ['AcSer', 'PubM'])}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Comentários Iniciais(1 min)</label>
-                        {renderNameInputWithDropdown(meeting.id, 'comentariosIniciais', meeting.comentariosIniciais || '', ['Ac'])}
-                      </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Indicador de Palco</label>
+                    {renderNameInputWithDropdown(meeting.id, 'indicadorPalco', meeting.indicadorPalco, ['PubM'])}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Microfone Volante</label>
+                    {renderNameInputWithDropdown(meeting.id, 'microfoneVolante', meeting.microfoneVolante, ['PubM'])}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Limpeza</label>
+                    {renderLimpezaDropdown(meeting.id, meeting.limpeza)}
+                  </div>
+                </div>
+                {activeTab === 'meio-semana' && 'presidencia' in meeting && (
+                  <div className="mt-4">
+                    <div className="bg-blue-600 text-white px-4 py-3">
+                      <h5 className="font-bold">PRESIDÊNCIA</h5>
                     </div>
-                  </div>
-                </div>
-              )}
-              {activeTab === 'meio-semana' && 'temaTesouro' in meeting && (
-                <div className="mt-4">
-                  <div className="bg-[#656164] text-white px-1 py-0.09 flex items-center gap-0.5">
-                    <img src="https://congregacao.tpe.net.br/imagens/rms20.jpg" alt="Tesouros" style={{ maxWidth: '50px', marginRight: '' }} />
-                    <h5 className="font-bold">TESOUROS DA PALAVRA DE DEUS</h5>
-                  </div>
-                  <div className="p-4 bg-gray-100 rounded-lg">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Tema Principal(10 min)</label>
-                        <input
-                          type="text"
-                          value={meeting.temaTesouro || ''}
-                          onChange={(e) => handleInputChange(meeting.id, 'temaTesouro', e.target.value)}
-                          className="w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1"> </label>
-                        {renderNameInputWithDropdown(meeting.id, 'designadoTesouro', meeting.designadoTesouro || '', ['AcSer'])}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Joias Espirituais(10 min)</label>
-                        {renderNameInputWithDropdown(meeting.id, 'joiasEspirituais', meeting.joiasEspirituais || '', ['AcSer'])}
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Leitura da Bíblia(4 min)</label>
-                        {renderNameInputWithDropdown(meeting.id, 'leituraBiblia', meeting.leituraBiblia || '', ['PubM'])}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              {activeTab === 'meio-semana' && 'ministerio' in meeting && (
-                <section className="bg-yellow-50 rounded-lg mt-4 relative" style={{ zIndex: 10 }}>
-                  <div className="bg-[#a56803] text-white px-1 py-0.09 flex items-center gap-0.5">
-                    <img src="https://congregacao.tpe.net.br/imagens/rms30.jpg" alt="Ministério" style={{ maxWidth: '50px', marginRight: '' }} />
-                    <h5 className="font-bold">FAÇA SEU MELHOR NO MINISTÉRIO</h5>
-                  </div>
-                  <div className="p-4">
-                    <div className="space-y-3">
-                      {(meeting.ministerio || []).map((item, index) => (
-                        <div key={index} className="bg-white p-3 rounded border">
-                          <div className="flex justify-between items-start mb-2">
-                            <div>
-                              <span className="font-medium text-sm">{item.tipo || 'Nova Parte'}</span>
-                              <span className="text-xs text-gray-500 ml-2">({item.tempo} min)</span>
-                            </div>
-                            <button
-                              onClick={() => removeMinisterioItem(meeting.id, index)}
-                              className="text-red-600 hover:text-red-800 p-1"
-                              title="Excluir Parte"
-                            >
-                              <Trash2 size={16} />
-                            </button>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
-                            <div className="md:col-span-2">
-                              <label className="block text-xs font-medium text-gray-700 mb-1">Tipo</label>
-                              <select
-                                value={item.tipo}
-                                onChange={(e) => handleMinisterioChange(meeting.id, index, 'tipo', e.target.value)}
-                                className="w-full border rounded px-2 py-1 text-sm"
-                              >
-                                <option value="">Selecione</option>
-                                <option value="Iniciando conversas">Iniciando conversas</option>
-                                <option value="Cultivando o interesse">Cultivando o interesse</option>
-                                <option value="Fazendo discípulos">Fazendo discípulos</option>
-                                <option value="Explicando suas crenças">Explicando suas crenças</option>
-                                <option value="Discurso">Discurso</option>
-                              </select>
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 mb-1">Tempo (min)</label>
-                              <input
-                                type="text"
-                                value={item.tempo}
-                                onChange={(e) => handleMinisterioChange(meeting.id, index, 'tempo', e.target.value)}
-                                className="w-full border rounded px-2 py-1 text-sm"
-                              />
-                            </div>
-                            <div>
-                              <label className="block text-xs font-medium text-gray-700 mb-1">Estudante</label>
-                              {renderMinisterioInputWithDropdown(
-                                meeting.id,
-                                index,
-                                'estudante',
-                                item.estudante,
-                                item.tipo
-                              )}
-                            </div>
-                            {item.tipo !== 'Discurso' && (
-                              <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Ajudante</label>
-                                {renderMinisterioInputWithDropdown(
-                                  meeting.id,
-                                  index,
-                                  'ajudante',
-                                  item.ajudante || '',
-                                  item.tipo
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      ))}
-                      <button
-                        type="button"
-                        onClick={() => addMinisterioItem(meeting.id)}
-                        className="flex items-center text-blue-600 hover:text-blue-800 mt-4"
-                      >
-                        <Plus size={16} className="mr-1" /> Adicionar Parte
-                      </button>
-                    </div>
-                  </div>
-                </section>
-              )}
-              {activeTab === 'meio-semana' && 'canticoMeio' in meeting && meeting.necessidadesLocais && meeting.estudoBiblico && (
-                <section className="bg-red-50 rounded-lg mt-8 relative" style={{ zIndex: 10 }}>
-                  <div className="bg-[#99131e] text-white px-1 py-0.09 flex items-center gap-0.5">
-                    <img src="https://congregacao.tpe.net.br/imagens/rms40.jpg" alt="Vida Cristã" style={{ maxWidth: '50px', marginRight: '' }} />
-                    <h5 className="font-bold">NOSSA VIDA CRISTÃ</h5>
-                  </div>
-                  <div className="p-4">
-                    <div className="space-y-4">
+                    <div className="p-4 bg-blue-50 rounded-lg">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Cântico (5 min)</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Presidente</label>
+                          {renderNameInputWithDropdown(meeting.id, 'presidencia', meeting.presidencia || '', ['Ac'])}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Cântico Inicial</label>
                           <input
                             type="text"
-                            value={meeting.canticoMeio || ''}
-                            onChange={(e) => handleInputChange(meeting.id, 'canticoMeio', e.target.value)}
+                            value={meeting.canticoInicial || ''}
+                            onChange={(e) => handleInputChange(meeting.id, 'canticoInicial', e.target.value)}
                             className="w-full border rounded px-3 py-2"
                           />
                         </div>
-                        {/* Campo Responsável removido */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Oração</label>
+                          {renderNameInputWithDropdown(meeting.id, 'oracao', meeting.oracao || '', ['AcSer', 'PubM'])}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Comentários Iniciais(1 min)</label>
+                          {renderNameInputWithDropdown(meeting.id, 'comentariosIniciais', meeting.comentariosIniciais || '', ['Ac'])}
+                        </div>
                       </div>
-                      <div className="bg-white p-4 rounded border">
-                        <h6 className="font-medium mb-3">Necessidades Locais (15 min)</h6>
+                    </div>
+                  </div>
+                )}
+                {activeTab === 'meio-semana' && 'temaTesouro' in meeting && (
+                  <div className="mt-4">
+                    <div className="bg-[#656164] text-white px-1 py-0.09 flex items-center gap-0.5">
+                      <img src="https://congregacao.tpe.net.br/imagens/rms20.jpg" alt="Tesouros" style={{ maxWidth: '50px', marginRight: '' }} />
+                      <h5 className="font-bold">TESOUROS DA PALAVRA DE DEUS</h5>
+                    </div>
+                    <div className="p-4 bg-gray-100 rounded-lg">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Tema Principal(10 min)</label>
+                          <input
+                            type="text"
+                            value={meeting.temaTesouro || ''}
+                            onChange={(e) => handleInputChange(meeting.id, 'temaTesouro', e.target.value)}
+                            className="w-full border rounded px-3 py-2"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1"> </label>
+                          {renderNameInputWithDropdown(meeting.id, 'designadoTesouro', meeting.designadoTesouro || '', ['AcSer'])}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Joias Espirituais(10 min)</label>
+                          {renderNameInputWithDropdown(meeting.id, 'joiasEspirituais', meeting.joiasEspirituais || '', ['AcSer'])}
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Leitura da Bíblia(4 min)</label>
+                          {renderNameInputWithDropdown(meeting.id, 'leituraBiblia', meeting.leituraBiblia || '', ['PubM'])}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {activeTab === 'meio-semana' && 'ministerio' in meeting && (
+                  <section className="bg-yellow-50 rounded-lg mt-4 relative" style={{ zIndex: 10 }}>
+                    <div className="bg-[#a56803] text-white px-1 py-0.09 flex items-center gap-0.5">
+                      <img src="https://congregacao.tpe.net.br/imagens/rms30.jpg" alt="Ministério" style={{ maxWidth: '50px', marginRight: '' }} />
+                      <h5 className="font-bold">FAÇA SEU MELHOR NO MINISTÉRIO</h5>
+                    </div>
+                    <div className="p-4">
+                      <div className="space-y-3">
+                        {(meeting.ministerio || []).map((item, index) => (
+                          <div key={index} className="bg-white p-3 rounded border">
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <span className="font-medium text-sm">{item.tipo || 'Nova Parte'}</span>
+                                <span className="text-xs text-gray-500 ml-2">({item.tempo} min)</span>
+                              </div>
+                              <button
+                                onClick={() => removeMinisterioItem(meeting.id, index)}
+                                className="text-red-600 hover:text-red-800 p-1"
+                                title="Excluir Parte"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-5 gap-3 items-end">
+                              <div className="md:col-span-2">
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Tipo</label>
+                                <select
+                                  value={item.tipo}
+                                  onChange={(e) => handleMinisterioChange(meeting.id, index, 'tipo', e.target.value)}
+                                  className="w-full border rounded px-2 py-1 text-sm"
+                                >
+                                  <option value="">Selecione</option>
+                                  <option value="Iniciando conversas">Iniciando conversas</option>
+                                  <option value="Cultivando o interesse">Cultivando o interesse</option>
+                                  <option value="Fazendo discípulos">Fazendo discípulos</option>
+                                  <option value="Explicando suas crenças">Explicando suas crenças</option>
+                                  <option value="Discurso">Discurso</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Tempo (min)</label>
+                                <input
+                                  type="text"
+                                  value={item.tempo}
+                                  onChange={(e) => handleMinisterioChange(meeting.id, index, 'tempo', e.target.value)}
+                                  className="w-full border rounded px-2 py-1 text-sm"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-xs font-medium text-gray-700 mb-1">Estudante</label>
+                                {renderMinisterioInputWithDropdown(
+                                  meeting.id,
+                                  index,
+                                  'estudante',
+                                  item.estudante,
+                                  item.tipo
+                                )}
+                              </div>
+                              {item.tipo !== 'Discurso' && (
+                                <div>
+                                  <label className="block text-xs font-medium text-gray-700 mb-1">Ajudante</label>
+                                  {renderMinisterioInputWithDropdown(
+                                    meeting.id,
+                                    index,
+                                    'ajudante',
+                                    item.ajudante || '',
+                                    item.tipo
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => addMinisterioItem(meeting.id)}
+                          className="flex items-center text-blue-600 hover:text-blue-800 mt-4"
+                        >
+                          <Plus size={16} className="mr-1" /> Adicionar Parte
+                        </button>
+                      </div>
+                    </div>
+                  </section>
+                )}
+                {activeTab === 'meio-semana' && 'canticoMeio' in meeting && meeting.necessidadesLocais && meeting.estudoBiblico && (
+                  <section className="bg-red-50 rounded-lg mt-8 relative" style={{ zIndex: 10 }}>
+                    <div className="bg-[#99131e] text-white px-1 py-0.09 flex items-center gap-0.5">
+                      <img src="https://congregacao.tpe.net.br/imagens/rms40.jpg" alt="Vida Cristã" style={{ maxWidth: '50px', marginRight: '' }} />
+                      <h5 className="font-bold">NOSSA VIDA CRISTÃ</h5>
+                    </div>
+                    <div className="p-4">
+                      <div className="space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Tema</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Cântico (5 min)</label>
                             <input
                               type="text"
-                              value={meeting.necessidadesLocais.tema || ''}
-                              onChange={(e) => handleNestedInputChange(meeting.id, 'necessidadesLocais', 'tema', e.target.value)}
+                              value={meeting.canticoMeio || ''}
+                              onChange={(e) => handleInputChange(meeting.id, 'canticoMeio', e.target.value)}
+                              className="w-full border rounded px-3 py-2"
+                            />
+                          </div>
+                          {/* Campo Responsável removido */}
+                        </div>
+                        <div className="bg-white p-4 rounded border">
+                          <div className="flex justify-between items-center mb-3">
+                            <button
+                              type="button"
+                              onClick={() => addNecessidadesLocaisItem(meeting.id)}
+                              className="text-blue-600 hover:text-blue-800 flex items-center text-sm font-medium"
+                            >
+                              <Plus size={16} className="mr-1" /> Adicionar Parte
+                            </button>
+                          </div>
+
+                          <div className="space-y-4">
+                            <div className="bg-gray-50 p-3 rounded border">
+                              <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                                <div className="md:col-span-3">
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">Tema</label>
+                                  <input
+                                    type="text"
+                                    value={meeting.necessidadesLocais.tema || ''}
+                                    onChange={(e) => handleNestedInputChange(meeting.id, 'necessidadesLocais', 'tema', e.target.value)}
+                                    className="w-full border rounded px-3 py-2"
+                                  />
+                                </div>
+                                <div className="md:col-span-1">
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">Tempo (min)</label>
+                                  <input
+                                    type="text"
+                                    value={meeting.necessidadesLocais.tempo ?? ''}
+                                    onChange={(e) => handleNestedInputChange(meeting.id, 'necessidadesLocais', 'tempo', e.target.value)}
+                                    className="w-full border rounded px-3 py-2"
+                                  />
+                                </div>
+                                <div className="md:col-span-2">
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">Designado</label>
+                                  {renderNameInputWithDropdown(meeting.id, 'necessidadesLocais', meeting.necessidadesLocais.designado || '', ['AcSer'], true, 'designado')}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Itens adicionais dinâmicos */}
+                            {(meeting.necessidadesLocais.extras || []).map((item: any, index: number) => (
+                              <div key={`nl-${index}`} className="bg-gray-50 p-3 rounded border relative">
+                                <button
+                                  type="button"
+                                  onClick={() => removeNecessidadesLocaisItem(meeting.id, index)}
+                                  className="absolute top-3 right-3 text-red-500 hover:text-red-700"
+                                  title="Excluir Parte"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                                <h6 className="font-medium text-sm mb-2 text-gray-600">Parte Adicional</h6>
+                                <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                                  <div className="md:col-span-3">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tema</label>
+                                    <input
+                                      type="text"
+                                      value={item.tema || ''}
+                                      onChange={(e) => handleNecessidadesLocaisExtraChange(meeting.id, index, 'tema', e.target.value)}
+                                      className="w-full border rounded px-3 py-2"
+                                    />
+                                  </div>
+                                  <div className="md:col-span-1">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Tempo (min)</label>
+                                    <input
+                                      type="text"
+                                      value={item.tempo || ''}
+                                      onChange={(e) => handleNecessidadesLocaisExtraChange(meeting.id, index, 'tempo', e.target.value)}
+                                      className="w-full border rounded px-3 py-2"
+                                    />
+                                  </div>
+                                  <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Designado</label>
+                                    {renderNecessidadesLocaisExtraInputWithDropdown(
+                                      meeting.id,
+                                      index,
+                                      'designado',
+                                      item.designado || '',
+                                      ['AcSer']
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="bg-white p-4 rounded border">
+                          <h6 className="font-medium mb-3">Estudo Bíblico de Congregação (30 min)</h6>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Dirigente</label>
+                              {renderNameInputWithDropdown(meeting.id, 'estudoBiblico', meeting.estudoBiblico.designado || '', ['Ac'], true, 'designado')}
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Ajudante</label>
+                              {renderNameInputWithDropdown(meeting.id, 'estudoBiblico', meeting.estudoBiblico.ajudante || '', ['PubM'], true, 'ajudante')}
+                            </div>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Comentários Finais (3 min)</label>
+                          {renderNameInputWithDropdown(meeting.id, 'comentariosFinais', meeting.comentariosFinais || '', ['Ac'])}
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Cântico Final</label>
+                            <input
+                              type="text"
+                              value={meeting.canticoFinal || ''}
+                              onChange={(e) => handleInputChange(meeting.id, 'canticoFinal', e.target.value)}
                               className="w-full border rounded px-3 py-2"
                             />
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Designado</label>
-                            {renderNameInputWithDropdown(meeting.id, 'necessidadesLocais', meeting.necessidadesLocais.designado || '', ['AcSer'], true, 'designado')}
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Oração Final</label>
+                            {renderNameInputWithDropdown(meeting.id, 'numeroCanticoFinal', meeting.numeroCanticoFinal || '', ['AcSer', 'PubM'])}
                           </div>
                         </div>
                       </div>
-                      <div className="bg-white p-4 rounded border">
-                        <h6 className="font-medium mb-3">Estudo Bíblico de Congregação (30 min)</h6>
+                    </div>
+                  </section>
+                )}
+                {activeTab === 'fim-semana' && meeting.discursoPublico && meeting.sentinela && (
+                  <>
+                    <div className="mt-4">
+                      <div className="bg-blue-600 text-white px-4 py-3">
+                        <h5 className="font-bold">DISCURSO PÚBLICO</h5>
+                      </div>
+                      <div className="p-4 bg-blue-50 rounded-lg">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tema</label>
+                            <input
+                              type="text"
+                              value={meeting.discursoPublico?.tema || ''}
+                              onChange={(e) => handleNestedInputChange(meeting.id, 'discursoPublico', 'tema', e.target.value)}
+                              className="w-full border rounded px-3 py-2"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Orador</label>
+                            <input
+                              type="text"
+                              value={meeting.discursoPublico?.orador || ''}
+                              onChange={(e) => handleNestedInputChange(meeting.id, 'discursoPublico', 'orador', e.target.value)}
+                              className="w-full border rounded px-3 py-2"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Congregação</label>
+                            <input
+                              type="text"
+                              value={meeting.discursoPublico?.congregacao || ''}
+                              onChange={(e) => handleNestedInputChange(meeting.id, 'discursoPublico', 'congregacao', e.target.value)}
+                              className="w-full border rounded px-3 py-2"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-4">
+                      <div className="bg-gray-600 text-white px-4 py-3">
+                        <h5 className="font-bold">ESTUDO DE A SENTINELA</h5>
+                      </div>
+                      <div className="p-4 bg-gray-100 rounded-lg">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Tema</label>
+                            <input
+                              type="text"
+                              value={meeting.sentinela?.tema || ''}
+                              onChange={(e) => handleNestedInputChange(meeting.id, 'sentinela', 'tema', e.target.value)}
+                              className="w-full border rounded px-3 py-2"
+                            />
+                          </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Dirigente</label>
-                            {renderNameInputWithDropdown(meeting.id, 'estudoBiblico', meeting.estudoBiblico.designado || '', ['Ac'], true, 'designado')}
+                            {renderNameInputWithDropdown(meeting.id, 'sentinela', meeting.sentinela.dirigente || '', ['Ac'], true, 'dirigente')}
                           </div>
                           <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Ajudante</label>
-                            {renderNameInputWithDropdown(meeting.id, 'estudoBiblico', meeting.estudoBiblico.ajudante || '', ['PubM'], true, 'ajudante')}
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Leitor</label>
+                            {renderNameInputWithDropdown(meeting.id, 'sentinela', meeting.sentinela.leitor || '', ['PubM'], true, 'leitor')}
                           </div>
                         </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Comentários Finais (3 min)</label>
-                        {renderNameInputWithDropdown(meeting.id, 'comentariosFinais', meeting.comentariosFinais || '', ['Ac'])}
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Cântico Final</label>
-                          <input
-                            type="text"
-                            value={meeting.canticoFinal || ''}
-                            onChange={(e) => handleInputChange(meeting.id, 'canticoFinal', e.target.value)}
-                            className="w-full border rounded px-3 py-2"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Oração Final</label>
-                          {renderNameInputWithDropdown(meeting.id, 'numeroCanticoFinal', meeting.numeroCanticoFinal || '', ['AcSer','PubM'])}
-                        </div>
-                      </div>
                     </div>
-                  </div>
-                </section>
-              )}
-              {activeTab === 'fim-semana' && meeting.discursoPublico && meeting.sentinela && (
-                <>
-                  <div className="mt-4">
-                    <div className="bg-blue-600 text-white px-4 py-3">
-                      <h5 className="font-bold">DISCURSO PÚBLICO</h5>
-                    </div>
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Tema</label>
-                          <input
-                            type="text"
-                            value={meeting.discursoPublico?.tema || ''}
-                            onChange={(e) => handleNestedInputChange(meeting.id, 'discursoPublico', 'tema', e.target.value)}
-                            className="w-full border rounded px-3 py-2"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Orador</label>
-                          <input
-                            type="text"
-                            value={meeting.discursoPublico?.orador || ''}
-                            onChange={(e) => handleNestedInputChange(meeting.id, 'discursoPublico', 'orador', e.target.value)}
-                            className="w-full border rounded px-3 py-2"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Congregação</label>
-                          <input
-                            type="text"
-                            value={meeting.discursoPublico?.congregacao || ''}
-                            onChange={(e) => handleNestedInputChange(meeting.id, 'discursoPublico', 'congregacao', e.target.value)}
-                            className="w-full border rounded px-3 py-2"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-4">
-                    <div className="bg-gray-600 text-white px-4 py-3">
-                      <h5 className="font-bold">ESTUDO DE A SENTINELA</h5>
-                    </div>
-                    <div className="p-4 bg-gray-100 rounded-lg">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="md:col-span-2">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Tema</label>
-                          <input
-                            type="text"
-                            value={meeting.sentinela?.tema || ''}
-                            onChange={(e) => handleNestedInputChange(meeting.id, 'sentinela', 'tema', e.target.value)}
-                            className="w-full border rounded px-3 py-2"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Dirigente</label>
-                          {renderNameInputWithDropdown(meeting.id, 'sentinela', meeting.sentinela.dirigente || '', ['Ac'], true, 'dirigente')}
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">Leitor</label>
-                          {renderNameInputWithDropdown(meeting.id, 'sentinela', meeting.sentinela.leitor || '', ['PubM'], true, 'leitor')}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-          ))}
+                  </>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>

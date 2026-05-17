@@ -221,8 +221,10 @@ const ReuniaoMeioSemana = () => {
             <div className="bg-white p-3 rounded border">
               <div className="flex justify-between items-start mb-2">
                 <div>
-                  <span className="font-medium">{currentMeeting.necessidadesLocais?.tema}</span>
-                  <span className="text-xs text-gray-500 ml-2">(15 min)</span>
+                  <span className="font-medium">{currentMeeting.necessidadesLocais?.tema || 'Necessidades Locais'}</span>
+                  {currentMeeting.necessidadesLocais?.tempo && (
+                    <span className="text-xs text-gray-500 ml-2">({currentMeeting.necessidadesLocais.tempo} min)</span>
+                  )}
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -231,6 +233,24 @@ const ReuniaoMeioSemana = () => {
                 </div>
               </div>
             </div>
+
+            {currentMeeting.necessidadesLocais?.extras?.map((item, index) => (
+              <div key={`extra-nl-${index}`} className="bg-white p-3 rounded border">
+                <div className="flex justify-between items-start mb-2">
+                  <div>
+                    <span className="font-medium">{item.tema || 'Parte Adicional'}</span>
+                    {item.tempo && (
+                      <span className="text-xs text-gray-500 ml-2">({item.tempo} min)</span>
+                    )}
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="flex items-center">
+                    <span className="font-medium"> {item.designado}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
             <div className="bg-white p-3 rounded border">
               <div className="flex justify-between items-start mb-2">
                 <div>
